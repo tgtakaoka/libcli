@@ -1,0 +1,6 @@
+= libcli for Arduino IDE =
+
+Support library to help implementing command line interface.
+
+More information about this library can be found at
+https://github.com/tgtakaoka/libcli

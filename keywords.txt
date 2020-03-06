@@ -1,0 +1,27 @@
+#######################################
+# Syntax Coloring Map libcli
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Cli             KEYWORD1        libcli
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+readCommand  KEYWORD2
+readUint16   KEYWORD2
+readUint8    KEYWORD2
+readLetter   KEYWORD2
+readLine     KEYWORD2
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+CLI_SPACE    LITERAL1
+CLI_NEWLINE  LITERAL1
+CLI_DELETE   LITERAL1
