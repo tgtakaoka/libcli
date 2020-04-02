@@ -59,20 +59,20 @@ size_t Cli::backspace(int8_t n) {
   return s;
 }
 
-void Cli::readUint8(InputHandler handler, uintptr_t extra) {
-  readUint(handler, extra, -2);
+bool Cli::readUint8(InputHandler handler, uintptr_t extra) {
+  return readUint(handler, extra, -2);
 }
 
-void Cli::readUint16(InputHandler handler, uintptr_t extra) {
-  readUint(handler, extra, -4);
+bool Cli::readUint16(InputHandler handler, uintptr_t extra) {
+  return readUint(handler, extra, -4);
 }
 
-void Cli::readUint8(InputHandler handler, uintptr_t extra, uint8_t value) {
-  readUint(handler, extra, 2, value);
+bool Cli::readUint8(InputHandler handler, uintptr_t extra, uint8_t value) {
+  return readUint(handler, extra, 2, value);
 }
 
-void Cli::readUint16(InputHandler handler, uintptr_t extra, uint16_t value) {
-  readUint(handler, extra, 4, value);
+bool Cli::readUint16(InputHandler handler, uintptr_t extra, uint16_t value) {
+  return readUint(handler, extra, 4, value);
 }
 
 void Cli::readCommand() {
@@ -85,21 +85,23 @@ void Cli::readCommand(CommandHandler handler) {
   readCommand();
 }
 
-void Cli::readLetter(InputHandler handler, uintptr_t extra) {
+bool Cli::readLetter(InputHandler handler, uintptr_t extra) {
   _mode = READ_CHAR;
   _inputHandler = handler;
   _extra = extra;
+  return false;
 }
 
-void Cli::readLine(LineHandler handler, uintptr_t extra) {
+bool Cli::readLine(LineHandler handler, uintptr_t extra) {
   _mode = READ_LINE;
   _lineHandler = handler;
   _lineLen = 0;
   *_lineBuffer = 0;
   _extra = extra;
+  return false;
 }
 
-void Cli::readUint(InputHandler handler, uintptr_t extra, int8_t digits, uint16_t value) {
+bool Cli::readUint(InputHandler handler, uintptr_t extra, int8_t digits, uint16_t value) {
   if (digits < 0) {
     _uintLen = 0;
     _uintDigits = -digits;
@@ -111,6 +113,7 @@ void Cli::readUint(InputHandler handler, uintptr_t extra, int8_t digits, uint16_
   _inputHandler = handler;
   _extra = extra;
   _mode = READ_UINT;
+  return false;
 }
 
 void Cli::setUint(uint8_t digits, uint16_t value) {

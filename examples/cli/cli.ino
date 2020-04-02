@@ -29,14 +29,12 @@ static bool handleDump(Cli::State state, uint16_t value, uintptr_t extra) {
   if (state == Cli::State::CLI_DELETE) {
     if (extra == DUMP_ADDRESS) return false;
     Cli.backspace();
-    Cli.readUint16(handleDump, DUMP_ADDRESS, last_addr);
-    return false;
+    return Cli.readUint16(handleDump, DUMP_ADDRESS, last_addr);
   }
   if (extra == DUMP_ADDRESS) {
     last_addr = value;
     if (state == Cli::State::CLI_SPACE) {
-      Cli.readUint8(handleDump, DUMP_LENGTH);
-      return false;
+      return Cli.readUint8(handleDump, DUMP_LENGTH);
     }
     value = 16;
   }
@@ -54,25 +52,19 @@ static bool handleMemory(Cli::State state, uint16_t value, uintptr_t extra) {
     if (extra == MEMORY_ADDRESS) return false;
     Cli.backspace();
     if (index == 0)
-      Cli.readUint16(handleMemory, MEMORY_ADDRESS, last_addr);
-    else {
-      index--;
-      Cli.readUint8(handleMemory, MEMORY_INDEX(index), mem_buffer[index]);
-    }
-    return false;
+      return Cli.readUint16(handleMemory, MEMORY_ADDRESS, last_addr);
+    index--;
+    return Cli.readUint8(handleMemory, MEMORY_INDEX(index), mem_buffer[index]);
   }
   if (extra == MEMORY_ADDRESS) {
     last_addr = value;
-    Cli.readUint8(handleMemory, MEMORY_INDEX(0));
-    return false;
+    return Cli.readUint8(handleMemory, MEMORY_INDEX(0));
   }
 
   mem_buffer[index++] = value;
   if (state == Cli::State::CLI_SPACE) {
-    if (index < sizeof(mem_buffer)) {
-      Cli.readUint8(handleMemory, MEMORY_INDEX(index));
-      return false;
-    }
+    if (index < sizeof(mem_buffer))
+      return Cli.readUint8(handleMemory, MEMORY_INDEX(index));
     Cli.println();
   }
   Cli.print(F("write memory: "));
@@ -100,18 +92,15 @@ static bool handleCommand(char c) {
   }
   if (c == 'd') {
     Cli.print(F("dump "));
-    Cli.readUint16(handleDump, DUMP_ADDRESS);
-    return false;
+    return Cli.readUint16(handleDump, DUMP_ADDRESS);
   }
   if (c == 'l') {
     Cli.print(F("load "));
-    Cli.readLine(handleLoad, 0);
-    return false;
+    return Cli.readLine(handleLoad, 0);
   }
   if (c == 'm') {
     Cli.print(F("memory "));
-    Cli.readUint16(handleMemory, MEMORY_ADDRESS);
-    return false;
+    return Cli.readUint16(handleMemory, MEMORY_ADDRESS);
   }
   if (c == '?') {
     Cli.println(F("s(tep) d(ump) l(oad) m(emory)"));

@@ -36,12 +36,12 @@ public:
   void setPrompt(void (*prompt)(Stream &console));
 
   void readCommand(CommandHandler handler);
-  void readUint8(InputHandler handler, uintptr_t extra);
-  void readUint16(InputHandler handler, uintptr_t extra);
-  void readUint8(InputHandler handler, uintptr_t extra, uint8_t value);
-  void readUint16(InputHandler handler, uintptr_t extra, uint16_t value);
-  void readLetter(InputHandler handler, uintptr_t extra);
-  void readLine(LineHandler hadler, uintptr_t extra);
+  bool readUint8(InputHandler handler, uintptr_t extra);
+  bool readUint16(InputHandler handler, uintptr_t extra);
+  bool readUint8(InputHandler handler, uintptr_t extra, uint8_t value);
+  bool readUint16(InputHandler handler, uintptr_t extra, uint16_t value);
+  bool readLetter(InputHandler handler, uintptr_t extra);
+  bool readLine(LineHandler hadler, uintptr_t extra);
 
   size_t backspace(int8_t n = 1);
   size_t printUint8(uint8_t value);
@@ -86,7 +86,7 @@ private:
   void (*_prompt)(Stream&);
 
 
-  void readUint(InputHandler, uintptr_t extra, int8_t digits, uint16_t value = 0);
+  bool readUint(InputHandler, uintptr_t extra, int8_t digits, uint16_t value = 0);
   void readCommand();
   void processCommand(char c);
   void processUint(char c);
