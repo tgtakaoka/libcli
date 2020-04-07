@@ -52,6 +52,16 @@ size_t Cli::printUint16(uint16_t val16) {
   return printUint8(static_cast<uint8_t>(val16 >> 0)) + n;
 }
 
+size_t Cli::printUint24(uint32_t val24) {
+  const size_t n = printUint8(static_cast<uint8_t>(val24 >> 16));
+  return printUint16(static_cast<uint16_t>(val24 >> 0)) + n;
+}
+
+size_t Cli::printUint32(uint32_t val32) {
+  const size_t n = printUint16(static_cast<uint16_t>(val32 >> 16));
+  return printUint16(static_cast<uint16_t>(val32 >> 0)) + n;
+}
+
 size_t Cli::backspace(int8_t n) {
   size_t s = 0;
   while (n-- > 0)

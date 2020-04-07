@@ -44,8 +44,10 @@ public:
   bool readLine(LineHandler hadler, uintptr_t extra);
 
   size_t backspace(int8_t n = 1);
-  size_t printUint8(uint8_t value);
-  size_t printUint16(uint16_t value);
+  size_t printUint8(uint8_t value8);
+  size_t printUint16(uint16_t value16);
+  size_t printUint24(uint32_t value24);
+  size_t printUint32(uint32_t value32);
   template<typename T>
   size_t print(T value) {
     return _console->print(value);
