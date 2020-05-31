@@ -22,8 +22,8 @@
 
 #define LIBCLI_VERSION_MAJOR 1
 #define LIBCLI_VERSION_MINOR 0
-#define LIBCLI_VERSION_PATCH 0
-#define LIBCLI_VERSION_STRING "1.0.0"
+#define LIBCLI_VERSION_PATCH 1
+#define LIBCLI_VERSION_STRING "1.0.1"
 
 namespace libcli {
 
@@ -44,12 +44,12 @@ public:
   void setPrompter(Prompter prompter, uintptr_t extra);
 
   void readCommand(CommandHandler handler, uintptr_t extra);
-  bool readUint8(InputHandler handler, uintptr_t extra);
-  bool readUint16(InputHandler handler, uintptr_t extra);
-  bool readUint8(InputHandler handler, uintptr_t extra, uint8_t value);
-  bool readUint16(InputHandler handler, uintptr_t extra, uint16_t value);
-  bool readLetter(InputHandler handler, uintptr_t extra);
-  bool readLine(LineHandler hadler, uintptr_t extra);
+  void readUint8(InputHandler handler, uintptr_t extra);
+  void readUint16(InputHandler handler, uintptr_t extra);
+  void readUint8(InputHandler handler, uintptr_t extra, uint8_t value);
+  void readUint16(InputHandler handler, uintptr_t extra, uint16_t value);
+  void readLetter(InputHandler handler, uintptr_t extra);
+  void readLine(LineHandler hadler, uintptr_t extra);
 
   size_t backspace(int8_t n = 1);
   size_t printUint8(uint8_t value8);
@@ -97,8 +97,7 @@ private:
   Prompter _prompter;
   uintptr_t _prompterExtra;
 
-  bool readUint(InputHandler, uintptr_t extra, int8_t digits, uint16_t value = 0);
-  void readCommand();
+  void readUint(InputHandler, uintptr_t extra, int8_t digits, uint16_t value = 0);
   void processCommand(char c);
   void processUint(char c);
   void processLetter(char c);

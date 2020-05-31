@@ -32,12 +32,14 @@ static bool handleDump(Cli::State state, uint16_t value, uintptr_t extra) {
   if (state == Cli::State::CLI_DELETE) {
     if (extra == DUMP_ADDRESS) return false;
     cli.backspace();
-    return cli.readUint16(handleDump, DUMP_ADDRESS, last_addr);
+    cli.readUint16(handleDump, DUMP_ADDRESS, last_addr);
+    return false;
   }
   if (extra == DUMP_ADDRESS) {
     last_addr = value;
     if (state == Cli::State::CLI_SPACE) {
-      return cli.readUint8(handleDump, DUMP_LENGTH);
+      cli.readUint8(handleDump, DUMP_LENGTH);
+      return false;
     }
     value = 16;
   }
@@ -46,6 +48,7 @@ static bool handleDump(Cli::State state, uint16_t value, uintptr_t extra) {
   cli.printUint16(last_addr);
   cli.print(' ');
   cli.println(value);
+  cli.readCommand(handleCommand, 0);
   return true;
 }
 
@@ -54,20 +57,26 @@ static bool handleMemory(Cli::State state, uint16_t value, uintptr_t extra) {
   if (state == Cli::State::CLI_DELETE) {
     if (extra == MEMORY_ADDRESS) return false;
     cli.backspace();
-    if (index == 0)
-      return cli.readUint16(handleMemory, MEMORY_ADDRESS, last_addr);
+    if (index == 0) {
+      cli.readUint16(handleMemory, MEMORY_ADDRESS, last_addr);
+      return false;
+    }
     index--;
-    return cli.readUint8(handleMemory, MEMORY_INDEX(index), mem_buffer[index]);
+    cli.readUint8(handleMemory, MEMORY_INDEX(index), mem_buffer[index]);
+    return false;
   }
   if (extra == MEMORY_ADDRESS) {
     last_addr = value;
-    return cli.readUint8(handleMemory, MEMORY_INDEX(0));
+    cli.readUint8(handleMemory, MEMORY_INDEX(0));
+    return false;
   }
 
   mem_buffer[index++] = value;
   if (state == Cli::State::CLI_SPACE) {
-    if (index < sizeof(mem_buffer))
-      return cli.readUint8(handleMemory, MEMORY_INDEX(index));
+    if (index < sizeof(mem_buffer)) {
+      cli.readUint8(handleMemory, MEMORY_INDEX(index));
+      return false;
+    }
     cli.println();
   }
   cli.print(F("write memory: "));
@@ -77,6 +86,7 @@ static bool handleMemory(Cli::State state, uint16_t value, uintptr_t extra) {
     cli.printUint8(mem_buffer[i]);
   }
   cli.println();
+  cli.readCommand(handleCommand, 0);
   return true;
 }
 
@@ -85,6 +95,7 @@ static bool handleLoad(Cli::State state, char *line, uintptr_t extra) {
   (void)extra;
   cli.print(F("load file: "));
   cli.println(line);
+  cli.readCommand(handleCommand, 0);
   return true;
 }
 
@@ -92,25 +103,27 @@ static bool handleCommand(char c, uintptr_t extra) {
   (void)extra;
   if (c == 's') {
     cli.println(F("step"));
+    cli.readCommand(handleCommand, 0);
     return true;
   }
   if (c == 'd') {
     cli.print(F("dump "));
-    return cli.readUint16(handleDump, DUMP_ADDRESS);
+    cli.readUint16(handleDump, DUMP_ADDRESS);
   }
   if (c == 'l') {
     cli.print(F("load "));
-    return cli.readLine(handleLoad, 0);
+    cli.readLine(handleLoad, 0);
   }
   if (c == 'm') {
     cli.print(F("memory "));
-    return cli.readUint16(handleMemory, MEMORY_ADDRESS);
+    cli.readUint16(handleMemory, MEMORY_ADDRESS);
   }
   if (c == '?') {
     cli.print(F("libcli (version "));
     cli.print(LIBCLI_VERSION_STRING);
     cli.println(F(") example"));
     cli.println(F("s(tep) d(ump) l(oad) m(emory)"));
+    cli.readCommand(handleCommand, 0);
     return true;
   }
   return false;

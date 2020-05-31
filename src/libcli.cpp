@@ -69,50 +69,44 @@ size_t Cli::backspace(int8_t n) {
   return s;
 }
 
-bool Cli::readUint8(InputHandler handler, uintptr_t extra) {
-  return readUint(handler, extra, -2);
+void Cli::readUint8(InputHandler handler, uintptr_t extra) {
+  readUint(handler, extra, -2);
 }
 
-bool Cli::readUint16(InputHandler handler, uintptr_t extra) {
-  return readUint(handler, extra, -4);
+void Cli::readUint16(InputHandler handler, uintptr_t extra) {
+  readUint(handler, extra, -4);
 }
 
-bool Cli::readUint8(InputHandler handler, uintptr_t extra, uint8_t value) {
-  return readUint(handler, extra, 2, value);
+void Cli::readUint8(InputHandler handler, uintptr_t extra, uint8_t value) {
+  readUint(handler, extra, 2, value);
 }
 
-bool Cli::readUint16(InputHandler handler, uintptr_t extra, uint16_t value) {
-  return readUint(handler, extra, 4, value);
-}
-
-void Cli::readCommand() {
-  _mode = READ_COMMAND;
-  _printPrompt = true;
+void Cli::readUint16(InputHandler handler, uintptr_t extra, uint16_t value) {
+  readUint(handler, extra, 4, value);
 }
 
 void Cli::readCommand(CommandHandler handler, uintptr_t extra) {
   _commandHandler = handler;
   _commandExtra = extra;
-  readCommand();
+  _mode = READ_COMMAND;
 }
 
-bool Cli::readLetter(InputHandler handler, uintptr_t extra) {
+void Cli::readLetter(InputHandler handler, uintptr_t extra) {
   _mode = READ_CHAR;
   _inputHandler = handler;
   _extra = extra;
-  return false;
 }
 
-bool Cli::readLine(LineHandler handler, uintptr_t extra) {
+void Cli::readLine(LineHandler handler, uintptr_t extra) {
   _mode = READ_LINE;
   _lineHandler = handler;
+  _extra = extra;
   _lineLen = 0;
   *_lineBuffer = 0;
-  _extra = extra;
-  return false;
 }
 
-bool Cli::readUint(InputHandler handler, uintptr_t extra, int8_t digits, uint16_t value) {
+void Cli::readUint(InputHandler handler, uintptr_t extra, int8_t digits, uint16_t value) {
+  _extra = extra;
   if (digits < 0) {
     _uintLen = 0;
     _uintDigits = -digits;
@@ -122,9 +116,7 @@ bool Cli::readUint(InputHandler handler, uintptr_t extra, int8_t digits, uint16_
     setUint(digits, value);
   }
   _inputHandler = handler;
-  _extra = extra;
   _mode = READ_UINT;
-  return false;
 }
 
 void Cli::setUint(uint8_t digits, uint16_t value) {
@@ -146,8 +138,7 @@ void Cli::processUint(char c) {
     _uintValue += isDigit(c) ? c - '0' : c - 'A' + 10;
   } else if (isBackspace(c)) {
     if (_uintLen == 0) {
-      if (_inputHandler(CLI_DELETE, 0, _extra))
-        readCommand();
+      _printPrompt = _inputHandler(CLI_DELETE, 0, _extra);
       return;
     }
     backspace();
@@ -164,19 +155,17 @@ void Cli::processUint(char c) {
       print(' ');
       state = CLI_SPACE;
     }
-    if (_inputHandler(state, _uintValue, _extra))
-      readCommand();
+    _printPrompt = _inputHandler(state, _uintValue, _extra);
   } else if (isEscape(c)) {
     println(F(" cancel"));
-    readCommand();
+    _printPrompt = true;
   }
 }
 
 void Cli::processLine(char c) {
   if (isNewline(c)) {
     println();
-    if (_lineHandler(CLI_NEWLINE, _lineBuffer, _extra))
-      readCommand();
+    _printPrompt = _lineHandler(CLI_NEWLINE, _lineBuffer, _extra);
   } else if (isBackspace(c)) {
     if (_lineLen > 0) {
       backspace();
@@ -184,7 +173,7 @@ void Cli::processLine(char c) {
     }
   } else if (isEscape(c)) {
     println(F(" cancel"));
-    readCommand();
+    _printPrompt = true;
   } else if (_lineLen < sizeof(_lineBuffer) - 1) {
     print(c);
     _lineBuffer[_lineLen++] = c;
@@ -193,13 +182,11 @@ void Cli::processLine(char c) {
 }
 
 void Cli::processCommand(char c) {
-  if (_commandHandler(c, _commandExtra))
-    readCommand();
+  _printPrompt = _commandHandler(c, _commandExtra);
 }
 
 void Cli::processLetter(char c) {
-  if (_inputHandler(CLI_NEWLINE, c, _extra))
-    readCommand();
+  _printPrompt = _inputHandler(CLI_NEWLINE, c, _extra);
 }
 
 void Cli::setPrompter(Prompter prompter, uintptr_t extra) {
@@ -209,9 +196,14 @@ void Cli::setPrompter(Prompter prompter, uintptr_t extra) {
 
 void Cli::begin(Stream &console) {
   _console = &console;
+  _printPrompt = true;
 }
 
 void Cli::loop() {
+  if (_printPrompt && _prompter) {
+    _printPrompt = false;
+    _prompter(*this, _prompterExtra);
+  }
   if (_console->available()) {
     const char c = _console->read();
     switch (_mode) {
@@ -228,10 +220,6 @@ void Cli::loop() {
       processLine(c);
       break;
     }
-  }
-  if (_printPrompt && _prompter) {
-    _printPrompt = false;
-    _prompter(*this, _prompterExtra);
   }
 }
 
