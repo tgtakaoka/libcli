@@ -90,8 +90,9 @@ void Cli::readCommand() {
   _printPrompt = true;
 }
 
-void Cli::readCommand(CommandHandler handler) {
+void Cli::readCommand(CommandHandler handler, uintptr_t extra) {
   _commandHandler = handler;
+  _commandExtra = extra;
   readCommand();
 }
 
@@ -192,7 +193,7 @@ void Cli::processLine(char c) {
 }
 
 void Cli::processCommand(char c) {
-  if (_commandHandler(c))
+  if (_commandHandler(c, _commandExtra))
     readCommand();
 }
 
@@ -201,8 +202,9 @@ void Cli::processLetter(char c) {
     readCommand();
 }
 
-void Cli::setPrompt(void (*prompt)(Stream&)) {
-  _prompt = prompt;
+void Cli::setPrompter(Prompter prompter, uintptr_t extra) {
+  _prompter = prompter;
+  _prompterExtra = extra;
 }
 
 void Cli::begin(Stream &console) {
@@ -227,9 +229,9 @@ void Cli::loop() {
       break;
     }
   }
-  if (_printPrompt && _prompt) {
+  if (_printPrompt && _prompter) {
     _printPrompt = false;
-    _prompt(*_console);
+    _prompter(*this, _prompterExtra);
   }
 }
 

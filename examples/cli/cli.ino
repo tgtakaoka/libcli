@@ -85,7 +85,8 @@ static bool handleLoad(Cli::State state, char *line, uintptr_t extra) {
   return true;
 }
 
-static bool handleCommand(char c) {
+static bool handleCommand(char c, uintptr_t extra) {
+  (void)extra;
   if (c == 's') {
     Cli.println(F("step"));
     return true;
@@ -109,15 +110,16 @@ static bool handleCommand(char c) {
   return false;
 }
 
-void prompt(Stream &console) {
+void prompter(class Cli &console, uintptr_t extra) {
+  (void)extra;
   console.print(F("> "));
 }
 
 void setup() {
   Console.begin(9600);
   Cli.begin(Console);
-  Cli.setPrompt(prompt);
-  Cli.readCommand(handleCommand);
+  Cli.setPrompter(prompter, 0);
+  Cli.readCommand(handleCommand, 0);
 }
 
 void loop() {

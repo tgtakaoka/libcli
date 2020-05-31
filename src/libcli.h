@@ -27,15 +27,16 @@ public:
     CLI_NEWLINE,
     CLI_DELETE,
   };
-  typedef bool (*CommandHandler)(char c);
+  typedef bool (*CommandHandler)(char c, uintptr_t extra);
   typedef bool (*InputHandler)(State state, uint16_t value, uintptr_t extra);
   typedef bool (*LineHandler)(State state, char *line, uintptr_t extra);
+  typedef void (*Prompter)(Cli &cli, uintptr_t extra);
 
   void begin(Stream &console);
   void loop();
-  void setPrompt(void (*prompt)(Stream &console));
+  void setPrompter(Prompter prompter, uintptr_t extra);
 
-  void readCommand(CommandHandler handler);
+  void readCommand(CommandHandler handler, uintptr_t extra);
   bool readUint8(InputHandler handler, uintptr_t extra);
   bool readUint16(InputHandler handler, uintptr_t extra);
   bool readUint8(InputHandler handler, uintptr_t extra, uint8_t value);
@@ -71,6 +72,7 @@ private:
   } _mode;
 
   CommandHandler _commandHandler;
+  uintptr_t _commandExtra;
   InputHandler _inputHandler;
   LineHandler _lineHandler;
   uintptr_t _extra;
@@ -85,8 +87,8 @@ private:
   char _lineBuffer[80];
 
   bool _printPrompt;
-  void (*_prompt)(Stream&);
-
+  Prompter _prompter;
+  uintptr_t _prompterExtra;
 
   bool readUint(InputHandler, uintptr_t extra, int8_t digits, uint16_t value = 0);
   void readCommand();
