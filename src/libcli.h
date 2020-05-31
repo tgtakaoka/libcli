@@ -20,6 +20,11 @@
 #include <Arduino.h>
 #include <stdint.h>
 
+#define LIBCLI_VERSION_MAJOR 1
+#define LIBCLI_VERSION_MINOR 0
+#define LIBCLI_VERSION_PATCH 0
+#define LIBCLI_VERSION_STRING "1.0.0"
+
 namespace libcli {
 
 class Cli {

@@ -107,6 +107,9 @@ static bool handleCommand(char c, uintptr_t extra) {
     return cli.readUint16(handleMemory, MEMORY_ADDRESS);
   }
   if (c == '?') {
+    cli.print(F("libcli (version "));
+    cli.print(LIBCLI_VERSION_STRING);
+    cli.println(F(") example"));
     cli.println(F("s(tep) d(ump) l(oad) m(emory)"));
     return true;
   }
