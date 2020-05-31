@@ -20,6 +20,8 @@
 #include <Arduino.h>
 #include <stdint.h>
 
+namespace libcli {
+
 class Cli {
 public:
   enum State {
@@ -97,6 +99,8 @@ private:
   void processLetter(char c);
   void processLine(char c);
 };
+
+} // namespace libcli
 
 #endif
 

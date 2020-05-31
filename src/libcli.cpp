@@ -18,6 +18,8 @@
 
 #include <stdint.h>
 
+namespace libcli {
+
 static bool isBackspace(char c) {
   return c == '\b' || c == '\x7f';
 }
@@ -232,6 +234,8 @@ void Cli::loop() {
     _prompter(*this, _prompterExtra);
   }
 }
+
+} // namespace libcli
 
 // Local Variables:
 // mode: c++

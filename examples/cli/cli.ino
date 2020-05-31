@@ -18,6 +18,7 @@
 
 #define Console Serial
 
+using libcli::Cli;
 Cli cli;
 
 static uint16_t last_addr;
