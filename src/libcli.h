@@ -98,8 +98,6 @@ private:
   void processLine(char c);
 };
 
-extern Cli Cli;
-
 #endif
 
 // Local Variables:

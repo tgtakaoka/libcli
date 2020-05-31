@@ -18,8 +18,6 @@
 
 #include <stdint.h>
 
-class Cli Cli;
-
 static bool isBackspace(char c) {
   return c == '\b' || c == '\x7f';
 }
