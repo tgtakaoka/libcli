@@ -16,7 +16,13 @@ readUint16   KEYWORD2
 readUint8    KEYWORD2
 readLetter   KEYWORD2
 readLine     KEYWORD2
-
+printUint8   KEYWORD2
+printUint16  KEYWORD2
+printUint20  KEYWORD2
+printUint24  KEYWORD2
+printUint32  KEYWORD2
+print        KEYWORD2
+println      KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

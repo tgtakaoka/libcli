@@ -22,8 +22,8 @@
 
 #define LIBCLI_VERSION_MAJOR 1
 #define LIBCLI_VERSION_MINOR 0
-#define LIBCLI_VERSION_PATCH 1
-#define LIBCLI_VERSION_STRING "1.0.1"
+#define LIBCLI_VERSION_PATCH 2
+#define LIBCLI_VERSION_STRING "1.0.2"
 
 namespace libcli {
 
@@ -54,6 +54,7 @@ public:
   size_t backspace(int8_t n = 1);
   size_t printUint8(uint8_t value8);
   size_t printUint16(uint16_t value16);
+  size_t printUint20(uint32_t value20);
   size_t printUint24(uint32_t value24);
   size_t printUint32(uint32_t value32);
   template<typename T>
