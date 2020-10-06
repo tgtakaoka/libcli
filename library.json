@@ -1,0 +1,28 @@
+{
+    "name": "libcli",
+    "version": "1.0.2",
+    "description": "Command Line Interface Library",
+    "keywords": "command line",
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/tgtakaoka/libcli.git"
+    },
+    "authors":
+    [
+        {
+            "name": "Tadashi G. Takaoka",
+            "email": "tadashi.g.takaoka@gmail.com",
+            "url": "https://github.com/tgtakaoka/"
+        }
+    ],
+    "licence": "Apache-2.0",
+    "homepage": "https://github.com/tgtakaoka/libcli/",
+    "frameworks": "Arduino",
+    "platforms":
+    [
+        "atmelavr",
+        "atmelmegaavr",
+        "teensy"
+    ]
+}
