@@ -6,23 +6,33 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-Cli             KEYWORD1        libcli
+Cli          KEYWORD1        libcli
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-readCommand  KEYWORD2
-readUint16   KEYWORD2
-readUint8    KEYWORD2
+begin        KEYWORD2
+loop         KEYWORD2
+setPrompter  KEYWORD2
 readLetter   KEYWORD2
-readLine     KEYWORD2
-printUint8   KEYWORD2
-printUint16  KEYWORD2
-printUint20  KEYWORD2
-printUint24  KEYWORD2
-printUint32  KEYWORD2
+readString   KEYWORD2
+readHex8     KEYWORD2
+readHex16    KEYWORD2
+readHex32    KEYWORD2
+readDec8     KEYWORD2
+readDec16    KEYWORD2
+readDec32    KEYWORD2
+printHex8    KEYWORD2
+printHex16   KEYWORD2
+printHex20   KEYWORD2
+printHex24   KEYWORD2
+printHex32   KEYWORD2
+printDec8    KEYWORD2
+printDec16   KEYWORD2
+printDec32   KEYWORD2
 print        KEYWORD2
 println      KEYWORD2
+backspace    KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -31,3 +41,4 @@ println      KEYWORD2
 CLI_SPACE    LITERAL1
 CLI_NEWLINE  LITERAL1
 CLI_DELETE   LITERAL1
+CLI_CANCEL   LITERAL1

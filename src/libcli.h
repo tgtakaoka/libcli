@@ -14,104 +14,129 @@
  * limitations under the License.
  */
 
-#ifndef __libcli_h__
-#define __libcli_h__
+#ifndef __LIBCLI_H__
+#define __LIBCLI_H__
 
 #include <Arduino.h>
 #include <stdint.h>
 
 #define LIBCLI_VERSION_MAJOR 1
 #define LIBCLI_VERSION_MINOR 0
-#define LIBCLI_VERSION_PATCH 2
-#define LIBCLI_VERSION_STRING "1.0.2"
+#define LIBCLI_VERSION_PATCH 3
+#define LIBCLI_VERSION_STRING "1.0.3"
 
 namespace libcli {
 
 class Cli {
 public:
-  enum State {
-    CLI_SPACE,
-    CLI_NEWLINE,
-    CLI_DELETE,
-  };
-  typedef bool (*CommandHandler)(char c, uintptr_t extra);
-  typedef bool (*InputHandler)(State state, uint16_t value, uintptr_t extra);
-  typedef bool (*LineHandler)(State state, char *line, uintptr_t extra);
-  typedef void (*Prompter)(Cli &cli, uintptr_t extra);
+    enum State {
+        CLI_SPACE,    // an input is terminated by space.
+        CLI_NEWLINE,  // an input is terminated by newline.
+        CLI_DELETE,   // current input is canceled and back to previous.
+        CLI_CANCEL,   // whole input is canceled.
+    };
 
-  void begin(Stream &console);
-  void loop();
-  void setPrompter(Prompter prompter, uintptr_t extra);
+    // Callback function of |readLetter|.
+    typedef bool (*LetterHandler)(char letter, uintptr_t extra);
+    // Callback function of |readString|.
+    typedef bool (*StringHandler)(char *string, uintptr_t extra, State state);
+    // Callback function of |readHex| and |readDec|.
+    typedef bool (*ValueHandler)(uint32_t value, uintptr_t extra, State state);
+    // Callback function to print prompt.
+    typedef void (*Prompter)(Cli &cli, uintptr_t extra);
 
-  void readCommand(CommandHandler handler, uintptr_t extra);
-  void readUint8(InputHandler handler, uintptr_t extra);
-  void readUint16(InputHandler handler, uintptr_t extra);
-  void readUint8(InputHandler handler, uintptr_t extra, uint8_t value);
-  void readUint16(InputHandler handler, uintptr_t extra, uint16_t value);
-  void readLetter(InputHandler handler, uintptr_t extra);
-  void readLine(LineHandler hadler, uintptr_t extra);
+    // Initialize function.
+    void begin(Stream &console);
+    // Event loop.
+    void loop();
+    // Set a callback function to print prompt.
+    void setPrompter(Prompter prompter, uintptr_t extra);
 
-  size_t backspace(int8_t n = 1);
-  size_t printUint8(uint8_t value8);
-  size_t printUint16(uint16_t value16);
-  size_t printUint20(uint32_t value20);
-  size_t printUint24(uint32_t value24);
-  size_t printUint32(uint32_t value32);
-  template<typename T>
-  size_t print(T value) {
-    return _console->print(value);
-  }
-  template<typename T>
-  size_t println(T value) {
-    return _console->println(value);
-  }
-  size_t println() {
-    return _console->println();
-  }
+    void readLetter(LetterHandler handler, uintptr_t extra);
+    void readString(StringHandler hadler, uintptr_t extra);
+    void readHex8(ValueHandler handler, uintptr_t extra);
+    void readHex16(ValueHandler handler, uintptr_t extra);
+    void readHex32(ValueHandler handler, uintptr_t extra);
+    void readHex8(ValueHandler handler, uintptr_t extra, uint8_t val8);
+    void readHex16(ValueHandler handler, uintptr_t extra, uint16_t val16);
+    void readHex32(ValueHandler handler, uintptr_t extra, uint32_t val32);
+    void readDec8(ValueHandler handler, uintptr_t extra);
+    void readDec16(ValueHandler handler, uintptr_t extra);
+    void readDec32(ValueHandler handler, uintptr_t extra);
+    void readDec8(ValueHandler handler, uintptr_t extra, uint8_t val8);
+    void readDec16(ValueHandler handler, uintptr_t extra, uint16_t val16);
+    void readDec32(ValueHandler handler, uintptr_t extra, uint32_t val32);
+
+    size_t backspace(int8_t n = 1);
+    size_t printHex8(uint8_t val8);
+    size_t printHex16(uint16_t val16);
+    size_t printHex20(uint32_t val20);
+    size_t printHex24(uint32_t val24);
+    size_t printHex32(uint32_t val32);
+    size_t printDec8(uint8_t val8) { return printDec(val8); }
+    size_t printDec16(uint16_t val16) { return printDec(val16); }
+    size_t printDec32(uint32_t val32) { return printDec(val32); }
+
+    template <typename T>
+    size_t print(T value) {
+        return _console->print(value);
+    }
+    template <typename T>
+    size_t println(T value) {
+        return _console->println(value);
+    }
+    size_t println() { return _console->println(); }
 
 private:
-  Stream *_console;
+    Stream *_console;
 
-  enum Mode {
-    READ_COMMAND,
-    READ_UINT,
-    READ_CHAR,
-    READ_LINE,
-  } _mode;
+    bool _printPrompt;
+    Prompter _prompter;
+    uintptr_t _prompterExtra;
 
-  CommandHandler _commandHandler;
-  uintptr_t _commandExtra;
-  InputHandler _inputHandler;
-  LineHandler _lineHandler;
-  uintptr_t _extra;
+    LetterHandler _letterHandler;
+    StringHandler _stringHandler;
+    ValueHandler _valueHandler;
+    uintptr_t _extra;
+    void (Cli::*_processor)(char c);
 
-  void setUint(uint8_t digits, uint16_t value);
-  State appendUint(char c);
-  uint8_t _uintLen;
-  uint8_t _uintDigits;
-  uint16_t _uintValue;
+    uint8_t _valueLen;
+    uint32_t _value;
+    enum Bits : int8_t {
+        BITS8 = 8,
+        BITS16 = 16,
+        BITS32 = 32,
+    } _valueBits;
 
-  uint8_t _lineLen;
-  char _lineBuffer[80];
+    uint8_t _stringLen;
+    char _string[80];
 
-  bool _printPrompt;
-  Prompter _prompter;
-  uintptr_t _prompterExtra;
+    void processNop(char c) {}
+    void processLetter(char c);
+    void processString(char c);
+    void processHex(char c);
+    void processDec(char c);
 
-  void readUint(InputHandler, uintptr_t extra, int8_t digits, uint16_t value = 0);
-  void processCommand(char c);
-  void processUint(char c);
-  void processLetter(char c);
-  void processLine(char c);
+    void readHex(
+            ValueHandler, uintptr_t extra, int8_t bits, uint32_t value = 0);
+    void setHex(Bits bits, uint32_t value);
+    void readDec(
+            ValueHandler, uintptr_t extra, int8_t bits, uint32_t value = 0);
+    void setDec(Bits bits, uint32_t value);
+    bool acceptDec(char c) const;
+    template <typename T>
+    size_t printDec(T value) {
+        return _console->print(value);
+    }
 };
 
-} // namespace libcli
+}  // namespace libcli
 
 #endif
 
 // Local Variables:
 // mode: c++
-// c-basic-offset: 2
-// tab-width: 2
+// c-basic-offset: 4
+// tab-width: 4
 // End:
-// vim: set ft=cpp et ts=2 sw=2:
+// vim: set ft=cpp et ts=4 sw=4:
