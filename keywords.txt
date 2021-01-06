@@ -13,7 +13,6 @@ Cli          KEYWORD1        libcli
 #######################################
 begin        KEYWORD2
 loop         KEYWORD2
-setPrompter  KEYWORD2
 readLetter   KEYWORD2
 readString   KEYWORD2
 readHex8     KEYWORD2

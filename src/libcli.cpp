@@ -209,13 +209,13 @@ void Cli::readDec(
 }
 
 void Cli::processLetter(char c) {
-    _printPrompt = _letterHandler(c, _extra);
+    _letterHandler(c, _extra);
 }
 
 void Cli::processString(char c) {
     if (isNewline(c)) {
         println();
-        _printPrompt = _stringHandler(_string, _extra, CLI_NEWLINE);
+        _stringHandler(_string, _extra, CLI_NEWLINE);
     } else if (isBackspace(c)) {
         if (_stringLen > 0) {
             backspace();
@@ -223,7 +223,7 @@ void Cli::processString(char c) {
         }
     } else if (isCancel(c)) {
         println(F(" cancel"));
-        _printPrompt = _stringHandler(_string, _extra, CLI_CANCEL);
+        _stringHandler(_string, _extra, CLI_CANCEL);
     } else if (_stringLen < sizeof(_string) - 1) {
         print(c);
         _string[_stringLen++] = c;
@@ -266,7 +266,7 @@ void Cli::processHex(char c) {
     } else {
         return;
     }
-    _printPrompt = _valueHandler(_value, _extra, state);
+    _valueHandler(_value, _extra, state);
 }
 
 bool Cli::acceptDec(char c) const {
@@ -315,25 +315,15 @@ void Cli::processDec(char c) {
     } else {
         return;
     }
-    _printPrompt = _valueHandler(_value, _extra, state);
-}
-
-void Cli::setPrompter(Prompter prompter, uintptr_t extra) {
-    _prompter = prompter;
-    _prompterExtra = extra;
+    _valueHandler(_value, _extra, state);
 }
 
 void Cli::begin(Stream &console) {
     _console = &console;
-    _printPrompt = true;
     _processor = &Cli::processNop;
 }
 
 void Cli::loop() {
-    if (_printPrompt && _prompter) {
-        _printPrompt = false;
-        _prompter(*this, _prompterExtra);
-    }
     if (_console->available()) {
         (this->*_processor)(_console->read());
     }

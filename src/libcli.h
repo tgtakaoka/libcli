@@ -37,20 +37,16 @@ public:
     };
 
     // Callback function of |readLetter|.
-    typedef bool (*LetterHandler)(char letter, uintptr_t extra);
+    typedef void (*LetterHandler)(char letter, uintptr_t extra);
     // Callback function of |readString|.
-    typedef bool (*StringHandler)(char *string, uintptr_t extra, State state);
+    typedef void (*StringHandler)(char *string, uintptr_t extra, State state);
     // Callback function of |readHex| and |readDec|.
-    typedef bool (*ValueHandler)(uint32_t value, uintptr_t extra, State state);
-    // Callback function to print prompt.
-    typedef void (*Prompter)(Cli &cli, uintptr_t extra);
+    typedef void (*ValueHandler)(uint32_t value, uintptr_t extra, State state);
 
     // Initialize function.
     void begin(Stream &console);
     // Event loop.
     void loop();
-    // Set a callback function to print prompt.
-    void setPrompter(Prompter prompter, uintptr_t extra);
 
     void readLetter(LetterHandler handler, uintptr_t extra);
     void readString(StringHandler hadler, uintptr_t extra);
@@ -90,10 +86,6 @@ public:
 private:
     Stream *_console;
 
-    bool _printPrompt;
-    Prompter _prompter;
-    uintptr_t _prompterExtra;
-
     LetterHandler _letterHandler;
     StringHandler _stringHandler;
     ValueHandler _valueHandler;
@@ -111,7 +103,7 @@ private:
     uint8_t _stringLen;
     char _string[80];
 
-    void processNop(char c) {}
+    void processNop(char c) { (void)c; }
     void processLetter(char c);
     void processString(char c);
     void processHex(char c);

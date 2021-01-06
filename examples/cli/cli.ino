@@ -19,34 +19,38 @@
 #define Console Serial
 
 using libcli::Cli;
-Cli cli;
+static Cli cli;
 
-static bool handleCommand(char, uintptr_t);
+static void handleCommand(char letter, uintptr_t extra);
 
-static uint32_t last_addr;
+/** print prompt and request letter input */
+static void prompt() {
+    cli.print(F("> "));
+    cli.readLetter(handleCommand, 0);
+}
+
+/** handler for readHex16 and readDec8 */
+static void handleDump(uint32_t value, uintptr_t extra, Cli::State state) {
+    static uint32_t last_addr;
 #define DUMP_ADDRESS 0
 #define DUMP_LENGTH 1
-static uint8_t mem_buffer[4];
-#define MEMORY_ADDRESS (sizeof(mem_buffer) + 0x10)
-#define MEMORY_INDEX(index) (index)
 
-static bool handleDump(uint32_t value, uintptr_t extra, Cli::State state) {
     if (state == Cli::State::CLI_CANCEL) {
-        cli.readLetter(handleCommand, 0);
-        return true;
+        prompt();
+        return;
     }
     if (state == Cli::State::CLI_DELETE) {
         if (extra == DUMP_ADDRESS)
-            return false;
+            return;
         cli.backspace();
         cli.readHex16(handleDump, DUMP_ADDRESS, last_addr);
-        return false;
+        return;
     }
     if (extra == DUMP_ADDRESS) {
         last_addr = value;
         if (state == Cli::State::CLI_SPACE) {
-            cli.readHex16(handleDump, DUMP_LENGTH);
-            return false;
+            cli.readDec8(handleDump, DUMP_LENGTH);
+            return;
         }
         value = 16;
     }
@@ -55,41 +59,46 @@ static bool handleDump(uint32_t value, uintptr_t extra, Cli::State state) {
     cli.print(F("dump memory: "));
     cli.printHex16(last_addr);
     cli.print(' ');
-    cli.printHex16(value);
+    cli.printDec8(value);
     cli.println();
-    cli.readLetter(handleCommand, 0);
-    return true;
+    prompt();
 }
 
-static bool handleMemory(uint32_t value, uintptr_t extra, Cli::State state) {
+/** handler for readHex16 and readHex8 */
+static void handleMemory(uint32_t value, uintptr_t extra, Cli::State state) {
+    static uint32_t last_addr;
+    static uint8_t mem_buffer[4];
+#define MEMORY_ADDRESS (-1)
+#define MEMORY_INDEX(index) (index)
+
     if (state == Cli::State::CLI_CANCEL) {
-        cli.readLetter(handleCommand, 0);
-        return true;
+        prompt();
+        return;
     }
     uint16_t index = extra;
     if (state == Cli::State::CLI_DELETE) {
         if (extra == MEMORY_ADDRESS)
-            return false;
+            return;
         cli.backspace();
         if (index == 0) {
             cli.readHex16(handleMemory, MEMORY_ADDRESS, last_addr);
-            return false;
+            return;
         }
         index--;
         cli.readHex8(handleMemory, MEMORY_INDEX(index), mem_buffer[index]);
-        return false;
+        return;
     }
     if (extra == MEMORY_ADDRESS) {
         last_addr = value;
         cli.readHex8(handleMemory, MEMORY_INDEX(0));
-        return false;
+        return;
     }
 
     mem_buffer[index++] = value;
     if (state == Cli::State::CLI_SPACE) {
         if (index < sizeof(mem_buffer)) {
             cli.readHex8(handleMemory, MEMORY_INDEX(index));
-            return false;
+            return;
         }
         cli.println();
     }
@@ -100,59 +109,57 @@ static bool handleMemory(uint32_t value, uintptr_t extra, Cli::State state) {
         cli.printHex8(mem_buffer[i]);
     }
     cli.println();
-    cli.readLetter(handleCommand, 0);
-    return true;
+    prompt();
 }
 
-static bool handleLoad(char *string, uintptr_t extra, Cli::State state) {
+/** handler for readString */
+static void handleLoad(char *string, uintptr_t extra, Cli::State state) {
     (void)extra;
     if (state != Cli::State::CLI_CANCEL) {
         cli.print(F("load file: "));
         cli.println(string);
     }
-    cli.readLetter(handleCommand, 0);
-    return true;
+    prompt();
 }
 
-static bool handleCommand(char letter, uintptr_t extra) {
+/** handler for readLetter */
+static void handleCommand(char letter, uintptr_t extra) {
     if (letter == 's') {
-        cli.println(F("step"));
-        cli.readLetter(handleCommand, 0);
-        return true;
+        cli.print(F("step"));
     }
     if (letter == 'd') {
         cli.print(F("dump "));
         cli.readHex16(handleDump, DUMP_ADDRESS);
+        return;
     }
     if (letter == 'l') {
         cli.print(F("load "));
         cli.readString(handleLoad, 0);
+        return;
     }
     if (letter == 'm') {
         cli.print(F("memory "));
         cli.readHex16(handleMemory, MEMORY_ADDRESS);
+        return;
     }
     if (letter == '?') {
         cli.print(F("libcli (version "));
         cli.print(LIBCLI_VERSION_STRING);
         cli.println(F(") example"));
-        cli.println(F("s(tep) d(ump) l(oad) m(emory)"));
-        cli.readLetter(handleCommand, 0);
-        return true;
+        cli.println(F("  ?: help"));
+        cli.println(F("  s: step"));
+        cli.println(F("  d: dump <address> <length>"));
+        cli.println(F("  l: load <filename>"));
+        cli.print(F("  m: memory <address> <byte>..."));
     }
-    return false;
-}
-
-void prompter(Cli &console, uintptr_t extra) {
-    (void)extra;
-    console.print(F("> "));
+    cli.println();
+    prompt();
 }
 
 void setup() {
     Console.begin(9600);
     cli.begin(Console);
-    cli.setPrompter(prompter, 0);
-    handleCommand('?', 0);
+    prompt();
 }
 
 void loop() {
