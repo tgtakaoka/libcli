@@ -29,7 +29,7 @@ namespace libcli {
 
 class Cli {
 public:
-    enum State {
+    enum State: uint8_t {
         CLI_SPACE,    // an input is terminated by space.
         CLI_NEWLINE,  // an input is terminated by newline.
         CLI_DELETE,   // current input is canceled and back to previous.
@@ -86,11 +86,13 @@ public:
 private:
     Stream *_console;
 
-    LetterHandler _letterHandler;
-    StringHandler _stringHandler;
-    ValueHandler _valueHandler;
-    uintptr_t _extra;
     void (Cli::*_processor)(char c);
+    union {
+        LetterHandler letter;
+        StringHandler string;
+        ValueHandler value;
+    } _handler;
+    uintptr_t _extra;
 
     uint8_t _valueLen;
     uint32_t _value;

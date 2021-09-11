@@ -68,8 +68,8 @@ static void handleDump(uint32_t value, uintptr_t extra, Cli::State state) {
 static void handleMemory(uint32_t value, uintptr_t extra, Cli::State state) {
     static uint32_t last_addr;
     static uint8_t mem_buffer[4];
-#define MEMORY_ADDRESS (-1)
-#define MEMORY_INDEX(index) (index)
+#define MEMORY_ADDRESS uint16_t(-1)
+#define MEMORY_INDEX(index) uint16_t(index)
 
     if (state == Cli::State::CLI_CANCEL) {
         prompt();

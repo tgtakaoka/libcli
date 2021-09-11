@@ -124,13 +124,13 @@ void Cli::readDec32(ValueHandler handler, uintptr_t extra, uint32_t val32) {
 
 void Cli::readLetter(LetterHandler handler, uintptr_t extra) {
     _processor = &Cli::processLetter;
-    _letterHandler = handler;
+    _handler.letter = handler;
     _extra = extra;
 }
 
 void Cli::readString(StringHandler handler, uintptr_t extra) {
     _processor = &Cli::processString;
-    _stringHandler = handler;
+    _handler.string = handler;
     _extra = extra;
     _stringLen = 0;
     *_string = 0;
@@ -139,7 +139,7 @@ void Cli::readString(StringHandler handler, uintptr_t extra) {
 void Cli::readHex(
         ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t value) {
     _processor = &Cli::processHex;
-    _valueHandler = handler;
+    _handler.value = handler;
     _extra = extra;
     if (bits >= 0) {
         _valueLen = 0;
@@ -193,7 +193,7 @@ static uint8_t decDigits(uint32_t value) {
 void Cli::readDec(
         ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t value) {
     _processor = &Cli::processDec;
-    _valueHandler = handler;
+    _handler.value = handler;
     _extra = extra;
     if (bits >= 0) {
         _valueLen = 0;
@@ -209,13 +209,13 @@ void Cli::readDec(
 }
 
 void Cli::processLetter(char c) {
-    _letterHandler(c, _extra);
+    _handler.letter(c, _extra);
 }
 
 void Cli::processString(char c) {
     if (isNewline(c)) {
         println();
-        _stringHandler(_string, _extra, CLI_NEWLINE);
+        _handler.string(_string, _extra, CLI_NEWLINE);
     } else if (isBackspace(c)) {
         if (_stringLen > 0) {
             backspace();
@@ -223,7 +223,7 @@ void Cli::processString(char c) {
         }
     } else if (isCancel(c)) {
         println(F(" cancel"));
-        _stringHandler(_string, _extra, CLI_CANCEL);
+        _handler.string(_string, _extra, CLI_CANCEL);
     } else if (_stringLen < sizeof(_string) - 1) {
         print(c);
         _string[_stringLen++] = c;
@@ -266,7 +266,7 @@ void Cli::processHex(char c) {
     } else {
         return;
     }
-    _valueHandler(_value, _extra, state);
+    _handler.value(_value, _extra, state);
 }
 
 bool Cli::acceptDec(char c) const {
@@ -315,7 +315,7 @@ void Cli::processDec(char c) {
     } else {
         return;
     }
-    _valueHandler(_value, _extra, state);
+    _handler.value(_value, _extra, state);
 }
 
 void Cli::begin(Stream &console) {
