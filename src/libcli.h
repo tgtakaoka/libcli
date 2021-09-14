@@ -29,7 +29,7 @@ namespace libcli {
 
 class Cli {
 public:
-    enum State: uint8_t {
+    enum State : uint8_t {
         CLI_SPACE,    // an input is terminated by space.
         CLI_NEWLINE,  // an input is terminated by newline.
         CLI_DELETE,   // current input is canceled and back to previous.
@@ -69,9 +69,9 @@ public:
     size_t printHex20(uint32_t val20);
     size_t printHex24(uint32_t val24);
     size_t printHex32(uint32_t val32);
-    size_t printDec8(uint8_t val8) { return printDec(val8); }
-    size_t printDec16(uint16_t val16) { return printDec(val16); }
-    size_t printDec32(uint32_t val32) { return printDec(val32); }
+    size_t printDec8(uint8_t val8);
+    size_t printDec16(uint16_t val16);
+    size_t printDec32(uint32_t val32);
 
     template <typename T>
     size_t print(T value) {
@@ -87,6 +87,7 @@ private:
     Stream *_console;
 
     void (Cli::*_processor)(char c);
+
     union {
         LetterHandler letter;
         StringHandler string;
@@ -111,17 +112,11 @@ private:
     void processHex(char c);
     void processDec(char c);
 
-    void readHex(
-            ValueHandler, uintptr_t extra, int8_t bits, uint32_t value = 0);
+    void readHex(ValueHandler, uintptr_t extra, int8_t bits, uint32_t value = 0);
     void setHex(Bits bits, uint32_t value);
-    void readDec(
-            ValueHandler, uintptr_t extra, int8_t bits, uint32_t value = 0);
+    void readDec(ValueHandler, uintptr_t extra, int8_t bits, uint32_t value = 0);
     void setDec(Bits bits, uint32_t value);
     bool acceptDec(char c) const;
-    template <typename T>
-    size_t printDec(T value) {
-        return _console->print(value);
-    }
 };
 
 }  // namespace libcli

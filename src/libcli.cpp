@@ -67,6 +67,18 @@ size_t Cli::printHex32(uint32_t val32) {
     return printHex16(val32) + n;
 }
 
+size_t Cli::printDec8(uint8_t val8) {
+    return _console->print(val8, DEC);
+}
+
+size_t Cli::printDec16(uint16_t val16) {
+    return _console->print(val16, DEC);
+}
+
+size_t Cli::printDec32(uint32_t val32) {
+    return _console->print(val32, DEC);
+}
+
 size_t Cli::backspace(int8_t n) {
     size_t s = 0;
     while (n-- > 0)
@@ -136,8 +148,7 @@ void Cli::readString(StringHandler handler, uintptr_t extra) {
     *_string = 0;
 }
 
-void Cli::readHex(
-        ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t value) {
+void Cli::readHex(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t value) {
     _processor = &Cli::processHex;
     _handler.value = handler;
     _extra = extra;
@@ -190,8 +201,7 @@ static uint8_t decDigits(uint32_t value) {
     return 10;
 }
 
-void Cli::readDec(
-        ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t value) {
+void Cli::readDec(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t value) {
     _processor = &Cli::processDec;
     _handler.value = handler;
     _extra = extra;
