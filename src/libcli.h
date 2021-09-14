@@ -112,12 +112,14 @@ private:
     void processHex(char c);
     void processDec(char c);
 
-    void readHex(ValueHandler, uintptr_t extra, int8_t bits, uint32_t value = 0);
-    void setHex(Bits bits, uint32_t value);
-    void readDec(ValueHandler, uintptr_t extra, int8_t bits, uint32_t value = 0);
-    void setDec(Bits bits, uint32_t value);
+    void readHex(ValueHandler, uintptr_t extra, int8_t bits, uint32_t defval = 0);
+    void setHex(Bits bits, uint32_t defval);
+    void readDec(ValueHandler, uintptr_t extra, int8_t bits, uint32_t defval = 0);
+    void setDec(Bits bits, uint32_t defval);
     bool acceptDec(char c) const;
 };
+
+extern class Cli Cli;
 
 }  // namespace libcli
 

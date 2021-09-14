@@ -20,6 +20,8 @@
 
 namespace libcli {
 
+class Cli Cli;
+
 static bool isBackspace(char c) {
     return c == '\b' || c == '\x7f';
 }
@@ -148,7 +150,7 @@ void Cli::readString(StringHandler handler, uintptr_t extra) {
     *_string = 0;
 }
 
-void Cli::readHex(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t value) {
+void Cli::readHex(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t defval) {
     _processor = &Cli::processHex;
     _handler.value = handler;
     _extra = extra;
@@ -158,23 +160,23 @@ void Cli::readHex(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t v
         _value = 0;
     } else {
         backspace(-bits / 4);
-        setHex(Bits(-bits), value);
+        setHex(Bits(-bits), defval);
     }
 }
 
-void Cli::setHex(Bits bits, uint32_t value) {
+void Cli::setHex(Bits bits, uint32_t defval) {
     _valueLen = int8_t(bits) / 4;
     _valueBits = bits;
-    _value = value;
+    _value = defval;
     switch (bits) {
     case BITS8:
-        printHex8(value);
+        printHex8(defval);
         break;
     case BITS16:
-        printHex16(value);
+        printHex16(defval);
         break;
     default:
-        printHex32(value);
+        printHex32(defval);
         break;
     }
 }
@@ -201,7 +203,7 @@ static uint8_t decDigits(uint32_t value) {
     return 10;
 }
 
-void Cli::readDec(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t value) {
+void Cli::readDec(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t defval) {
     _processor = &Cli::processDec;
     _handler.value = handler;
     _extra = extra;
@@ -210,11 +212,11 @@ void Cli::readDec(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t v
         _valueBits = Bits(bits);
         _value = 0;
     } else {
-        _valueLen = decDigits(value);
+        _valueLen = decDigits(defval);
         _valueBits = Bits(-bits);
-        _value = value;
+        _value = defval;
         backspace(_valueLen);
-        printDec32(_value);
+        printDec32(defval);
     }
 }
 
