@@ -27,7 +27,7 @@
 
 namespace libcli {
 
-class Cli {
+class Cli : public Stream {
 public:
     enum State : uint8_t {
         CLI_SPACE,    // an input is terminated by space.
@@ -36,58 +36,51 @@ public:
         CLI_CANCEL,   // whole input is canceled.
     };
 
-    // Callback function of |readLetter|.
+    /** Callback function of |readLetter|. */
     typedef void (*LetterHandler)(char letter, uintptr_t extra);
-    // Callback function of |readString|.
-    typedef void (*StringHandler)(char *string, uintptr_t extra, State state);
-    // Callback function of |readHex| and |readDec|.
+    /** Callback function of |readString|. */
+    typedef void (*StringHandler)(const char *string, uintptr_t extra, State state);
+    /** Callback function of |readHex| and |readDec|. */
     typedef void (*ValueHandler)(uint32_t value, uintptr_t extra, State state);
 
-    // Initialize function.
+    /** Initialize with |console| as command line interface. */
     void begin(Stream &console);
-    // Event loop.
+    /** Event loop; shold be called in Sketch's main loop(). */
     void loop();
 
+    /** Read a single letter. */
     void readLetter(LetterHandler handler, uintptr_t extra);
+    /** Read a string delimitted by newline. */
     void readString(StringHandler hadler, uintptr_t extra);
-    void readHex8(ValueHandler handler, uintptr_t extra);
-    void readHex16(ValueHandler handler, uintptr_t extra);
-    void readHex32(ValueHandler handler, uintptr_t extra);
-    void readHex8(ValueHandler handler, uintptr_t extra, uint8_t val8);
-    void readHex16(ValueHandler handler, uintptr_t extra, uint16_t val16);
-    void readHex32(ValueHandler handler, uintptr_t extra, uint32_t val32);
-    void readDec8(ValueHandler handler, uintptr_t extra);
-    void readDec16(ValueHandler handler, uintptr_t extra);
-    void readDec32(ValueHandler handler, uintptr_t extra);
-    void readDec8(ValueHandler handler, uintptr_t extra, uint8_t val8);
-    void readDec16(ValueHandler handler, uintptr_t extra, uint16_t val16);
-    void readDec32(ValueHandler handler, uintptr_t extra, uint32_t val32);
+    /** Read hexadecimal number in |digits| format. */
+    void readHex(ValueHandler handler, uintptr_t extra, uint8_t digits);
+    /** Read hexadecimal number in |digits| format with |defval| as default. */
+    void readHex(ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval);
+    /** Read decimal number less or equal to |limit|. */
+    void readDec(ValueHandler handler, uintptr_t extra, uint32_t limit);
+    /** Read decimal number less or equal to |limit| with |defval| as default. */
+    void readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval);
 
+    /** Print |value| in 0-prefixed hexadecimal format of |width| chars. */
+    size_t printHex(uint32_t value, uint8_t width = 0);
+    /** Print |value| in right-aligned decimal format of |width| chars. */
+    size_t printDec(uint32_t value, uint8_t width = 0);
+    /** Print backspace |n| times. */
     size_t backspace(int8_t n = 1);
-    size_t printHex8(uint8_t val8);
-    size_t printHex16(uint16_t val16);
-    size_t printHex20(uint32_t val20);
-    size_t printHex24(uint32_t val24);
-    size_t printHex32(uint32_t val32);
-    size_t printDec8(uint8_t val8);
-    size_t printDec16(uint16_t val16);
-    size_t printDec32(uint32_t val32);
 
-    template <typename T>
-    size_t print(T value) {
-        return _console->print(value);
-    }
-    template <typename T>
-    size_t println(T value) {
-        return _console->println(value);
-    }
-    size_t println() { return _console->println(); }
+    /** Virtual methods of Print. */
+    size_t write(uint8_t val) override;
+    size_t write(const uint8_t *buffer, size_t size) override;
+    int availableForWrite() override;
+    /** Virtual methods of Stream. */
+    int available() override;
+    int read() override;
+    int peek() override;
 
 private:
     Stream *_console;
 
     void (Cli::*_processor)(char c);
-
     union {
         LetterHandler letter;
         StringHandler string;
@@ -96,12 +89,9 @@ private:
     uintptr_t _extra;
 
     uint8_t _valueLen;
+    uint8_t _valueWidth;
     uint32_t _value;
-    enum Bits : int8_t {
-        BITS8 = 8,
-        BITS16 = 16,
-        BITS32 = 32,
-    } _valueBits;
+    uint32_t _valueMax;
 
     uint8_t _stringLen;
     char _string[80];
@@ -112,10 +102,9 @@ private:
     void processHex(char c);
     void processDec(char c);
 
-    void readHex(ValueHandler, uintptr_t extra, int8_t bits, uint32_t defval = 0);
-    void setHex(Bits bits, uint32_t defval);
-    void readDec(ValueHandler, uintptr_t extra, int8_t bits, uint32_t defval = 0);
-    void setDec(Bits bits, uint32_t defval);
+    void setHex(uint8_t digits, uint32_t defval);
+    void setDec(uint32_t limit, uint32_t defval);
+    bool acceptHex(char c) const;
     bool acceptDec(char c) const;
 };
 

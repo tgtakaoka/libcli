@@ -34,51 +34,72 @@ static bool isNewline(char c) {
     return c == '\n' || c == '\r';
 }
 
-static size_t outHex(Stream &console, uint8_t val8) {
-    val8 &= 0x0f;
-    val8 += (val8 < 10) ? '0' : ('A' - 10);
-    return console.print(static_cast<char>(val8));
+/**
+ * Virual methods of Print class.
+ */
+
+size_t Cli::write(uint8_t val) {
+    return _console->write(val);
 }
 
-static size_t outHex8(Stream &console, uint8_t val8) {
-    const size_t n = outHex(console, val8 >> 4);
-    return outHex(console, val8) + n;
+size_t Cli::write(const uint8_t *buffer, size_t size) {
+    return _console->write(buffer, size);
 }
 
-size_t Cli::printHex8(uint8_t val8) {
-    return outHex8(*_console, val8);
+int Cli::availableForWrite() {
+    return _console->availableForWrite();
 }
 
-size_t Cli::printHex16(uint16_t val16) {
-    const size_t n = printHex8(val16 >> 8);
-    return printHex8(val16) + n;
+/**
+ * Virtual methods of Stream class.
+ */
+
+int Cli::available() {
+    return _console->available();
 }
 
-size_t Cli::printHex20(uint32_t val20) {
-    const size_t n = outHex(*_console, val20 >> 16);
-    return printHex16(val20) + n;
+int Cli::read() {
+    return _console->read();
 }
 
-size_t Cli::printHex24(uint32_t val24) {
-    const size_t n = printHex8(val24 >> 16);
-    return printHex16(val24) + n;
+int Cli::peek() {
+    return _console->peek();
 }
 
-size_t Cli::printHex32(uint32_t val32) {
-    const size_t n = printHex16(val32 >> 16);
-    return printHex16(val32) + n;
+/** Returns number of hexadecimal digits of |value|. */
+static uint8_t hexDigits(uint32_t value) {
+    uint8_t n = 0;
+    do {
+        n++;
+        value >>= 4;
+    } while (value);
+    return n;
 }
 
-size_t Cli::printDec8(uint8_t val8) {
-    return _console->print(val8, DEC);
+size_t Cli::printHex(uint32_t value, uint8_t width) {
+    for (uint8_t n = hexDigits(value); n < width; n++) {
+        print('0');
+    }
+    print(value, HEX);
+    return width;
 }
 
-size_t Cli::printDec16(uint16_t val16) {
-    return _console->print(val16, DEC);
+/** Returns number of decimal digits of |value|. */
+static uint8_t decDigits(uint32_t value) {
+    uint8_t n = 0;
+    do {
+        n++;
+        value /= 10;
+    } while (value);
+    return n;
 }
 
-size_t Cli::printDec32(uint32_t val32) {
-    return _console->print(val32, DEC);
+size_t Cli::printDec(uint32_t value, uint8_t width) {
+    for (uint8_t n = decDigits(value); n < width; n++) {
+        print(' ');
+    }
+    print(value, DEC);
+    return width;
 }
 
 size_t Cli::backspace(int8_t n) {
@@ -86,54 +107,6 @@ size_t Cli::backspace(int8_t n) {
     while (n-- > 0)
         s += print(F("\b \b"));
     return s;
-}
-
-void Cli::readHex8(ValueHandler handler, uintptr_t extra) {
-    readHex(handler, extra, 8);
-}
-
-void Cli::readHex16(ValueHandler handler, uintptr_t extra) {
-    readHex(handler, extra, 16);
-}
-
-void Cli::readHex32(ValueHandler handler, uintptr_t extra) {
-    readHex(handler, extra, 32);
-}
-
-void Cli::readHex8(ValueHandler handler, uintptr_t extra, uint8_t val8) {
-    readHex(handler, extra, -8, val8);
-}
-
-void Cli::readHex16(ValueHandler handler, uintptr_t extra, uint16_t val16) {
-    readHex(handler, extra, -16, val16);
-}
-
-void Cli::readHex32(ValueHandler handler, uintptr_t extra, uint32_t val32) {
-    readHex(handler, extra, -32, val32);
-}
-
-void Cli::readDec8(ValueHandler handler, uintptr_t extra) {
-    readDec(handler, extra, 8);
-}
-
-void Cli::readDec16(ValueHandler handler, uintptr_t extra) {
-    readDec(handler, extra, 16);
-}
-
-void Cli::readDec32(ValueHandler handler, uintptr_t extra) {
-    readDec(handler, extra, 32);
-}
-
-void Cli::readDec8(ValueHandler handler, uintptr_t extra, uint8_t val8) {
-    readDec(handler, extra, -8, val8);
-}
-
-void Cli::readDec16(ValueHandler handler, uintptr_t extra, uint16_t val16) {
-    readDec(handler, extra, -16, val16);
-}
-
-void Cli::readDec32(ValueHandler handler, uintptr_t extra, uint32_t val32) {
-    readDec(handler, extra, -32, val32);
 }
 
 void Cli::readLetter(LetterHandler handler, uintptr_t extra) {
@@ -150,74 +123,52 @@ void Cli::readString(StringHandler handler, uintptr_t extra) {
     *_string = 0;
 }
 
-void Cli::readHex(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t defval) {
+void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits) {
     _processor = &Cli::processHex;
     _handler.value = handler;
     _extra = extra;
-    if (bits >= 0) {
-        _valueLen = 0;
-        _valueBits = Bits(bits);
-        _value = 0;
-    } else {
-        backspace(-bits / 4);
-        setHex(Bits(-bits), defval);
-    }
+    setHex(digits, 0);
+    _valueLen = 0;
 }
 
-void Cli::setHex(Bits bits, uint32_t defval) {
-    _valueLen = int8_t(bits) / 4;
-    _valueBits = bits;
-    _value = defval;
-    switch (bits) {
-    case BITS8:
-        printHex8(defval);
-        break;
-    case BITS16:
-        printHex16(defval);
-        break;
-    default:
-        printHex32(defval);
-        break;
-    }
+void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval) {
+    _processor = &Cli::processHex;
+    _handler.value = handler;
+    _extra = extra;
+    setHex(digits, defval);
+    backspace(_valueWidth);
+    printHex(defval, _valueWidth);
 }
 
-static uint8_t decDigits(uint32_t value) {
-    if (value < 10)
-        return 1;
-    if (value < 100)
-        return 2;
-    if (value < 1000)
-        return 3;
-    if (value < 10000)
-        return 4;
-    if (value < 100000L)
-        return 5;
-    if (value < 1000000L)
-        return 6;
-    if (value < 10000000L)
-        return 7;
-    if (value < 100000000L)
-        return 8;
-    if (value < 1000000000L)
-        return 9;
-    return 10;
+void Cli::setHex(uint8_t digits, uint32_t value) {
+    if (digits >= 8)
+        digits = 8;
+    _valueWidth = _valueLen = digits;
+    _valueMax = (1L << digits * 4);  // 0 if digits is 8.
+    _value = value;
 }
 
-void Cli::readDec(ValueHandler handler, uintptr_t extra, int8_t bits, uint32_t defval) {
+void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit) {
     _processor = &Cli::processDec;
     _handler.value = handler;
     _extra = extra;
-    if (bits >= 0) {
-        _valueLen = 0;
-        _valueBits = Bits(bits);
-        _value = 0;
-    } else {
-        _valueLen = decDigits(defval);
-        _valueBits = Bits(-bits);
-        _value = defval;
-        backspace(_valueLen);
-        printDec32(defval);
-    }
+    setDec(limit, 0);
+    _valueLen = 0;
+}
+
+void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
+    _processor = &Cli::processDec;
+    _handler.value = handler;
+    _extra = extra;
+    setDec(limit, defval);
+    backspace(_valueWidth);
+    printDec(defval, _valueWidth);
+}
+
+void Cli::setDec(uint32_t limit, uint32_t defval) {
+    _valueWidth = _valueLen = decDigits(limit);
+    _valueMax = limit + 1;
+    _value = defval;
 }
 
 void Cli::processLetter(char c) {
@@ -243,8 +194,15 @@ void Cli::processString(char c) {
     }
 }
 
+bool Cli::acceptHex(char c) const {
+    if (isHexadecimalDigit(c)) {
+        return _valueLen < _valueWidth;
+    }
+    return false;
+}
+
 void Cli::processHex(char c) {
-    if (isHexadecimalDigit(c) && _valueLen < int8_t(_valueBits) / 4) {
+    if (acceptHex(c)) {
         c = toUpperCase(c);
         print(c);
         _valueLen++;
@@ -264,7 +222,8 @@ void Cli::processHex(char c) {
         state = CLI_DELETE;
     } else if (isSpace(c) && _valueLen > 0) {
         backspace(_valueLen);
-        setHex(_valueBits, _value);
+        setHex(_valueWidth, _value);
+        printHex(_value, _valueWidth);
         if (isNewline(c)) {
             println();
             state = CLI_NEWLINE;
@@ -281,17 +240,22 @@ void Cli::processHex(char c) {
     _handler.value(_value, _extra, state);
 }
 
+static uint32_t acceptDecLimit(uint32_t max) {
+    if (max == 0)
+        return 429496729L;  // (1L << 32) ? 10;
+    return max / 10;
+}
+
 bool Cli::acceptDec(char c) const {
     if (isDigit(c)) {
-        const uint8_t n = c - '0';
-        const uint32_t v = _value;
-        switch (_valueBits) {
-        case BITS8:
-            return v < 25 || (v == 25 && n < 6);
-        case BITS16:
-            return v < 6553 || (v == 6553 && n < 6);
-        default:
-            return v < 429496729L || (v == 429496729L && n < 6);
+        const uint32_t limit = acceptDecLimit(_valueMax);
+        if (_value < limit) {
+            return true;
+        } else if (_value == limit) {
+            const uint8_t n = c - '0';
+            return n < _valueMax % 10;
+        } else {
+            return false;
         }
     }
     return false;
@@ -315,12 +279,17 @@ void Cli::processDec(char c) {
             return;
         }
         state = CLI_DELETE;
-    } else if (isNewline(c) && _valueLen > 0) {
-        println();
-        state = CLI_NEWLINE;
     } else if (isSpace(c) && _valueLen > 0) {
-        print(' ');
-        state = CLI_SPACE;
+        backspace(_valueLen);
+        setDec(_valueMax - 1, _value);
+        printDec(_value, _valueWidth);
+        if (isNewline(c)) {
+            println();
+            state = CLI_NEWLINE;
+        } else {
+            print(' ');
+            state = CLI_SPACE;
+        }
     } else if (isCancel(c)) {
         println(F(" cancel"));
         state = CLI_CANCEL;
@@ -336,8 +305,8 @@ void Cli::begin(Stream &console) {
 }
 
 void Cli::loop() {
-    if (_console->available()) {
-        (this->*_processor)(_console->read());
+    if (available()) {
+        (this->*_processor)(read());
     }
 }
 
