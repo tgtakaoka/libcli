@@ -23,21 +23,27 @@ namespace libcli {
 struct Cli::Impl {
     Stream *console;
 
-    void (Cli::Impl::*_processor)(char c);
-    union {
-        LetterHandler letter;
-        StringHandler string;
-        ValueHandler value;
-    } _handler;
-    uintptr_t _extra;
+    struct {
+        void (Cli::Impl::*processor)(char c);
+        union {
+            LetterHandler letter;
+            StringHandler string;
+            ValueHandler value;
+        } handler;
+        uintptr_t extra;
+    } _proc;
 
-    uint8_t _valueLen;
-    uint8_t _valueWidth;
-    uint32_t _value;
-    uint32_t _valueMax;
+    struct {
+        uint8_t len;
+        uint8_t width;
+        uint32_t val;
+        uint32_t max;
+    } _value;
 
-    uint8_t _stringLen;
-    char _string[80];
+    struct {
+        uint8_t len;
+        char buf[80];
+    } _string;
 
     void processNop(char c) { (void)c; }
     void processLetter(char c);
@@ -164,98 +170,98 @@ size_t Cli::Impl::backspace(int8_t n) {
 }
 
 void Cli::readLetter(LetterHandler handler, uintptr_t extra) {
-    _impl._processor = &Cli::Impl::processLetter;
-    _impl._handler.letter = handler;
-    _impl._extra = extra;
+    _impl._proc.processor = &Cli::Impl::processLetter;
+    _impl._proc.handler.letter = handler;
+    _impl._proc.extra = extra;
 }
 
 void Cli::readString(StringHandler handler, uintptr_t extra) {
-    _impl._processor = &Cli::Impl::processString;
-    _impl._handler.string = handler;
-    _impl._extra = extra;
-    _impl._stringLen = 0;
-    *_impl._string = 0;
+    _impl._proc.processor = &Cli::Impl::processString;
+    _impl._proc.handler.string = handler;
+    _impl._proc.extra = extra;
+    _impl._string.len = 0;
+    _impl._string.buf[0] = 0;
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits) {
-    _impl._processor = &Cli::Impl::processHex;
-    _impl._handler.value = handler;
-    _impl._extra = extra;
+    _impl._proc.processor = &Cli::Impl::processHex;
+    _impl._proc.handler.value = handler;
+    _impl._proc.extra = extra;
     _impl.setHex(digits, 0);
-    _impl._valueLen = 0;
+    _impl._value.len = 0;
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval) {
-    _impl._processor = &Cli::Impl::processHex;
-    _impl._handler.value = handler;
-    _impl._extra = extra;
+    _impl._proc.processor = &Cli::Impl::processHex;
+    _impl._proc.handler.value = handler;
+    _impl._proc.extra = extra;
     _impl.setHex(digits, defval);
-    backspace(_impl._valueWidth);
-    printHex(defval, _impl._valueWidth);
+    backspace(_impl._value.width);
+    printHex(defval, _impl._value.width);
 }
 
 void Cli::Impl::setHex(uint8_t digits, uint32_t defval) {
     if (digits >= 8)
         digits = 8;
-    _valueWidth = _valueLen = digits;
-    _valueMax = (1L << digits * 4);  // 0 if digits is 8.
-    _value = defval;
+    _value.width = _value.len = digits;
+    _value.max = (1L << digits * 4);  // 0 if digits is 8.
+    _value.val = defval;
 }
 
 void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit) {
-    _impl._processor = &Cli::Impl::processDec;
-    _impl._handler.value = handler;
-    _impl._extra = extra;
+    _impl._proc.processor = &Cli::Impl::processDec;
+    _impl._proc.handler.value = handler;
+    _impl._proc.extra = extra;
     _impl.setDec(limit, 0);
-    _impl._valueLen = 0;
+    _impl._value.len = 0;
 }
 
 void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
-    _impl._processor = &Cli::Impl::processDec;
-    _impl._handler.value = handler;
-    _impl._extra = extra;
+    _impl._proc.processor = &Cli::Impl::processDec;
+    _impl._proc.handler.value = handler;
+    _impl._proc.extra = extra;
     _impl.setDec(limit, defval);
-    backspace(_impl._valueWidth);
-    printDec(defval, _impl._valueWidth);
+    backspace(_impl._value.width);
+    printDec(defval, _impl._value.width);
 }
 
-void Cli::Impl::setDec(uint32_t limit, uint32_t defval) {
-    _valueWidth = _valueLen = decDigits(limit);
-    _valueMax = limit + 1;
-    _value = defval;
+void Cli::Impl::setDec(uint32_t limit, uint32_t value) {
+    _value.width = _value.len = decDigits(limit);
+    _value.max = limit + 1;
+    _value.val = value;
 }
 
 void Cli::Impl::processLetter(char c) {
-    _handler.letter(c, _extra);
+    _proc.handler.letter(c, _proc.extra);
 }
 
 void Cli::Impl::processString(char c) {
     if (isNewline(c)) {
         console->println();
-        _handler.string(_string, _extra, CLI_NEWLINE);
+        _proc.handler.string(_string.buf, _proc.extra, CLI_NEWLINE);
     } else if (isBackspace(c)) {
-        if (_stringLen > 0) {
+        if (_string.len > 0) {
             backspace();
-            _string[--_stringLen] = 0;
+            _string.buf[--_string.len] = 0;
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));
-        _handler.string(_string, _extra, CLI_CANCEL);
-    } else if (_stringLen < sizeof(_string) - 1) {
+        _proc.handler.string(_string.buf, _proc.extra, CLI_CANCEL);
+    } else if (_string.len < sizeof(_string.buf) - 1) {
         console->print(c);
-        _string[_stringLen++] = c;
-        _string[_stringLen] = 0;
+        _string.buf[_string.len++] = c;
+        _string.buf[_string.len] = 0;
     }
 }
 
 bool Cli::Impl::acceptValue(char c, uint8_t base) const {
     if (base == 16) {
-        return isHexadecimalDigit(c) && _valueLen < _valueWidth;
+        return isHexadecimalDigit(c) && _value.len < _value.width;
     }
     if (isDigit(c)) {
-        const uint32_t limit = (_valueMax == 0) ? 429496729L : _valueMax / 10;
+        const uint32_t limit = (_value.max == 0) ? 429496729L : _value.max / 10;
         const uint8_t n = c - '0';
-        return _value < limit || (_value == limit && n < (_valueMax % 10));
+        return _value.val < limit || (_value.val == limit && n < (_value.max % 10));
     }
     return false;
 }
@@ -272,29 +278,29 @@ void Cli::Impl::processValue(char c, uint8_t base) {
     if (acceptValue(c, base)) {
         c = toUpperCase(c);
         console->print(c);
-        _valueLen++;
-        _value *= base;
-        _value += isDigit(c) ? c - '0' : c - 'A' + 10;
+        _value.len++;
+        _value.val *= base;
+        _value.val += isDigit(c) ? c - '0' : c - 'A' + 10;
         return;
     }
 
     State state;
     if (isBackspace(c)) {
-        if (_valueLen > 0) {
+        if (_value.len > 0) {
             backspace();
-            _value /= base;
-            _valueLen--;
+            _value.val /= base;
+            _value.len--;
             return;
         }
         state = CLI_DELETE;
-    } else if (isSpace(c) && _valueLen > 0) {
-        backspace(_valueLen);
+    } else if (isSpace(c) && _value.len > 0) {
+        backspace(_value.len);
         if (base == 10) {
-            setDec(_valueMax - 1, _value);
-            printDec(_value, _valueWidth);
+            setDec(_value.max - 1, _value.val);
+            printDec(_value.val, _value.width);
         } else {
-            setHex(_valueWidth, _value);
-            printHex(_value, _valueWidth);
+            setHex(_value.width, _value.val);
+            printHex(_value.val, _value.width);
         }
         if (isNewline(c)) {
             console->println();
@@ -309,17 +315,17 @@ void Cli::Impl::processValue(char c, uint8_t base) {
     } else {
         return;
     }
-    _handler.value(_value, _extra, state);
+    _proc.handler.value(_value.val, _proc.extra, state);
 }
 
 void Cli::begin(Stream &console) {
     _impl.console = &console;
-    _impl._processor = &Cli::Impl::processNop;
+    _impl._proc.processor = &Cli::Impl::processNop;
 }
 
 void Cli::loop() {
     if (available()) {
-        (_impl.*_impl._processor)(read());
+        (_impl.*_impl._proc.processor)(read());
     }
 }
 
