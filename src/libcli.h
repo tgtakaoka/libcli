@@ -43,6 +43,8 @@ public:
     /** Callback function of |readHex| and |readDec|. */
     typedef void (*ValueHandler)(uint32_t value, uintptr_t extra, State state);
 
+    /** Default constructor. */
+    Cli();
     /** Initialize with |console| as command line interface. */
     void begin(Stream &console);
     /** Event loop; shold be called in Sketch's main loop(). */
@@ -77,35 +79,10 @@ public:
     int read() override;
     int peek() override;
 
+    struct Impl;
+
 private:
-    Stream *_console;
-
-    void (Cli::*_processor)(char c);
-    union {
-        LetterHandler letter;
-        StringHandler string;
-        ValueHandler value;
-    } _handler;
-    uintptr_t _extra;
-
-    uint8_t _valueLen;
-    uint8_t _valueWidth;
-    uint32_t _value;
-    uint32_t _valueMax;
-
-    uint8_t _stringLen;
-    char _string[80];
-
-    void processNop(char c) { (void)c; }
-    void processLetter(char c);
-    void processString(char c);
-    void processHex(char c);
-    void processDec(char c);
-    void processValue(char c, uint8_t base);
-
-    void setHex(uint8_t digits, uint32_t defval);
-    void setDec(uint32_t limit, uint32_t defval);
-    bool acceptValue(char c, uint8_t base) const;
+    Impl &_impl;
 };
 
 extern class Cli Cli;

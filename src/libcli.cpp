@@ -20,7 +20,81 @@
 
 namespace libcli {
 
+struct Cli::Impl {
+    Stream *console;
+
+    void (Cli::Impl::*_processor)(char c);
+    union {
+        LetterHandler letter;
+        StringHandler string;
+        ValueHandler value;
+    } _handler;
+    uintptr_t _extra;
+
+    uint8_t _valueLen;
+    uint8_t _valueWidth;
+    uint32_t _value;
+    uint32_t _valueMax;
+
+    uint8_t _stringLen;
+    char _string[80];
+
+    void processNop(char c) { (void)c; }
+    void processLetter(char c);
+    void processString(char c);
+    void processHex(char c);
+    void processDec(char c);
+    void processValue(char c, uint8_t base);
+
+    void setHex(uint8_t digits, uint32_t value);
+    void setDec(uint32_t max, uint32_t value);
+    bool acceptValue(char c, uint8_t base) const;
+
+    size_t backspace(int8_t n = 1);
+    size_t printHex(uint32_t value, uint8_t width);
+    size_t printDec(uint32_t value, uint8_t width);
+};
+
+/**
+ * Global variables.
+ */
 class Cli Cli;
+static Cli::Impl impl;
+
+/** Default constructor. */
+Cli::Cli() : _impl(impl) {}
+
+/**
+ * Virual methods of Print class.
+ */
+
+size_t Cli::write(uint8_t val) {
+    return _impl.console->write(val);
+}
+
+size_t Cli::write(const uint8_t *buffer, size_t size) {
+    return _impl.console->write(buffer, size);
+}
+
+int Cli::availableForWrite() {
+    return _impl.console->availableForWrite();
+}
+
+/**
+ * Virtual methods of Stream class.
+ */
+
+int Cli::available() {
+    return _impl.console->available();
+}
+
+int Cli::read() {
+    return _impl.console->read();
+}
+
+int Cli::peek() {
+    return _impl.console->peek();
+}
 
 static bool isBackspace(char c) {
     return c == '\b' || c == '\x7f';
@@ -34,38 +108,6 @@ static bool isNewline(char c) {
     return c == '\n' || c == '\r';
 }
 
-/**
- * Virual methods of Print class.
- */
-
-size_t Cli::write(uint8_t val) {
-    return _console->write(val);
-}
-
-size_t Cli::write(const uint8_t *buffer, size_t size) {
-    return _console->write(buffer, size);
-}
-
-int Cli::availableForWrite() {
-    return _console->availableForWrite();
-}
-
-/**
- * Virtual methods of Stream class.
- */
-
-int Cli::available() {
-    return _console->available();
-}
-
-int Cli::read() {
-    return _console->read();
-}
-
-int Cli::peek() {
-    return _console->peek();
-}
-
 /** Returns number of hexadecimal digits of |value|. */
 static uint8_t hexDigits(uint32_t value) {
     uint8_t n = 0;
@@ -77,10 +119,14 @@ static uint8_t hexDigits(uint32_t value) {
 }
 
 size_t Cli::printHex(uint32_t value, uint8_t width) {
+    return _impl.printHex(value, width);
+}
+
+size_t Cli::Impl::printHex(uint32_t value, uint8_t width) {
     for (uint8_t n = hexDigits(value); n < width; n++) {
-        print('0');
+        console->print('0');
     }
-    print(value, HEX);
+    console->print(value, HEX);
     return width;
 }
 
@@ -95,89 +141,97 @@ static uint8_t decDigits(uint32_t value) {
 }
 
 size_t Cli::printDec(uint32_t value, uint8_t width) {
+    return _impl.printDec(value, width);
+}
+
+size_t Cli::Impl::printDec(uint32_t value, uint8_t width) {
     for (uint8_t n = decDigits(value); n < width; n++) {
-        print(' ');
+        console->print(' ');
     }
-    print(value, DEC);
+    console->print(value, DEC);
     return width;
 }
 
 size_t Cli::backspace(int8_t n) {
+    return _impl.backspace(n);
+}
+
+size_t Cli::Impl::backspace(int8_t n) {
     size_t s = 0;
     while (n-- > 0)
-        s += print(F("\b \b"));
+        s += console->print(F("\b \b"));
     return s;
 }
 
 void Cli::readLetter(LetterHandler handler, uintptr_t extra) {
-    _processor = &Cli::processLetter;
-    _handler.letter = handler;
-    _extra = extra;
+    _impl._processor = &Cli::Impl::processLetter;
+    _impl._handler.letter = handler;
+    _impl._extra = extra;
 }
 
 void Cli::readString(StringHandler handler, uintptr_t extra) {
-    _processor = &Cli::processString;
-    _handler.string = handler;
-    _extra = extra;
-    _stringLen = 0;
-    *_string = 0;
+    _impl._processor = &Cli::Impl::processString;
+    _impl._handler.string = handler;
+    _impl._extra = extra;
+    _impl._stringLen = 0;
+    *_impl._string = 0;
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits) {
-    _processor = &Cli::processHex;
-    _handler.value = handler;
-    _extra = extra;
-    setHex(digits, 0);
-    _valueLen = 0;
+    _impl._processor = &Cli::Impl::processHex;
+    _impl._handler.value = handler;
+    _impl._extra = extra;
+    _impl.setHex(digits, 0);
+    _impl._valueLen = 0;
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval) {
-    _processor = &Cli::processHex;
-    _handler.value = handler;
-    _extra = extra;
-    setHex(digits, defval);
-    backspace(_valueWidth);
-    printHex(defval, _valueWidth);
+    _impl._processor = &Cli::Impl::processHex;
+    _impl._handler.value = handler;
+    _impl._extra = extra;
+    _impl.setHex(digits, defval);
+    backspace(_impl._valueWidth);
+    printHex(defval, _impl._valueWidth);
 }
 
-void Cli::setHex(uint8_t digits, uint32_t value) {
+void Cli::Impl::setHex(uint8_t digits, uint32_t defval) {
     if (digits >= 8)
         digits = 8;
     _valueWidth = _valueLen = digits;
     _valueMax = (1L << digits * 4);  // 0 if digits is 8.
-    _value = value;
+    _value = defval;
 }
 
 void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit) {
-    _processor = &Cli::processDec;
-    _handler.value = handler;
-    _extra = extra;
-    setDec(limit, 0);
-    _valueLen = 0;
+    _impl._processor = &Cli::Impl::processDec;
+    _impl._handler.value = handler;
+    _impl._extra = extra;
+    _impl.setDec(limit, 0);
+    _impl._valueLen = 0;
 }
 
 void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
-    _processor = &Cli::processDec;
-    _handler.value = handler;
-    _extra = extra;
-    setDec(limit, defval);
-    backspace(_valueWidth);
-    printDec(defval, _valueWidth);
+    _impl._processor = &Cli::Impl::processDec;
+    _impl._handler.value = handler;
+    _impl._extra = extra;
+    _impl.setDec(limit, defval);
+    backspace(_impl._valueWidth);
+    printDec(defval, _impl._valueWidth);
 }
 
-void Cli::setDec(uint32_t limit, uint32_t defval) {
+void Cli::Impl::setDec(uint32_t limit, uint32_t defval) {
     _valueWidth = _valueLen = decDigits(limit);
     _valueMax = limit + 1;
     _value = defval;
 }
 
-void Cli::processLetter(char c) {
+void Cli::Impl::processLetter(char c) {
     _handler.letter(c, _extra);
 }
 
-void Cli::processString(char c) {
+void Cli::Impl::processString(char c) {
     if (isNewline(c)) {
-        println();
+        console->println();
         _handler.string(_string, _extra, CLI_NEWLINE);
     } else if (isBackspace(c)) {
         if (_stringLen > 0) {
@@ -185,16 +239,16 @@ void Cli::processString(char c) {
             _string[--_stringLen] = 0;
         }
     } else if (isCancel(c)) {
-        println(F(" cancel"));
+        console->println(F(" cancel"));
         _handler.string(_string, _extra, CLI_CANCEL);
     } else if (_stringLen < sizeof(_string) - 1) {
-        print(c);
+        console->print(c);
         _string[_stringLen++] = c;
         _string[_stringLen] = 0;
     }
 }
 
-bool Cli::acceptValue(char c, uint8_t base) const {
+bool Cli::Impl::acceptValue(char c, uint8_t base) const {
     if (base == 16) {
         return isHexadecimalDigit(c) && _valueLen < _valueWidth;
     }
@@ -206,18 +260,18 @@ bool Cli::acceptValue(char c, uint8_t base) const {
     return false;
 }
 
-void Cli::processHex(char c) {
+void Cli::Impl::processHex(char c) {
     processValue(c, 16);
 }
 
-void Cli::processDec(char c) {
+void Cli::Impl::processDec(char c) {
     processValue(c, 10);
 }
 
-void Cli::processValue(char c, uint8_t base) {
+void Cli::Impl::processValue(char c, uint8_t base) {
     if (acceptValue(c, base)) {
         c = toUpperCase(c);
-        print(c);
+        console->print(c);
         _valueLen++;
         _value *= base;
         _value += isDigit(c) ? c - '0' : c - 'A' + 10;
@@ -243,14 +297,14 @@ void Cli::processValue(char c, uint8_t base) {
             printHex(_value, _valueWidth);
         }
         if (isNewline(c)) {
-            println();
+            console->println();
             state = CLI_NEWLINE;
         } else {
-            print(' ');
+            console->print(' ');
             state = CLI_SPACE;
         }
     } else if (isCancel(c)) {
-        println(F(" cancel"));
+        console->println(F(" cancel"));
         state = CLI_CANCEL;
     } else {
         return;
@@ -259,13 +313,13 @@ void Cli::processValue(char c, uint8_t base) {
 }
 
 void Cli::begin(Stream &console) {
-    _console = &console;
-    _processor = &Cli::processNop;
+    _impl.console = &console;
+    _impl._processor = &Cli::Impl::processNop;
 }
 
 void Cli::loop() {
     if (available()) {
-        (this->*_processor)(read());
+        (_impl.*_impl._processor)(read());
     }
 }
 
