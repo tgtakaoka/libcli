@@ -194,19 +194,32 @@ void Cli::processString(char c) {
     }
 }
 
-bool Cli::acceptHex(char c) const {
-    if (isHexadecimalDigit(c)) {
-        return _valueLen < _valueWidth;
+bool Cli::acceptValue(char c, uint8_t base) const {
+    if (base == 16) {
+        return isHexadecimalDigit(c) && _valueLen < _valueWidth;
+    }
+    if (isDigit(c)) {
+        const uint32_t limit = (_valueMax == 0) ? 429496729L : _valueMax / 10;
+        const uint8_t n = c - '0';
+        return _value < limit || (_value == limit && n < (_valueMax % 10));
     }
     return false;
 }
 
 void Cli::processHex(char c) {
-    if (acceptHex(c)) {
+    processValue(c, 16);
+}
+
+void Cli::processDec(char c) {
+    processValue(c, 10);
+}
+
+void Cli::processValue(char c, uint8_t base) {
+    if (acceptValue(c, base)) {
         c = toUpperCase(c);
         print(c);
         _valueLen++;
-        _value *= 16;
+        _value *= base;
         _value += isDigit(c) ? c - '0' : c - 'A' + 10;
         return;
     }
@@ -215,74 +228,20 @@ void Cli::processHex(char c) {
     if (isBackspace(c)) {
         if (_valueLen > 0) {
             backspace();
-            _value /= 16;
+            _value /= base;
             _valueLen--;
             return;
         }
         state = CLI_DELETE;
     } else if (isSpace(c) && _valueLen > 0) {
         backspace(_valueLen);
-        setHex(_valueWidth, _value);
-        printHex(_value, _valueWidth);
-        if (isNewline(c)) {
-            println();
-            state = CLI_NEWLINE;
+        if (base == 10) {
+            setDec(_valueMax - 1, _value);
+            printDec(_value, _valueWidth);
         } else {
-            print(' ');
-            state = CLI_SPACE;
+            setHex(_valueWidth, _value);
+            printHex(_value, _valueWidth);
         }
-    } else if (isCancel(c)) {
-        println(F(" cancel"));
-        state = CLI_CANCEL;
-    } else {
-        return;
-    }
-    _handler.value(_value, _extra, state);
-}
-
-static uint32_t acceptDecLimit(uint32_t max) {
-    if (max == 0)
-        return 429496729L;  // (1L << 32) ? 10;
-    return max / 10;
-}
-
-bool Cli::acceptDec(char c) const {
-    if (isDigit(c)) {
-        const uint32_t limit = acceptDecLimit(_valueMax);
-        if (_value < limit) {
-            return true;
-        } else if (_value == limit) {
-            const uint8_t n = c - '0';
-            return n < _valueMax % 10;
-        } else {
-            return false;
-        }
-    }
-    return false;
-}
-
-void Cli::processDec(char c) {
-    if (acceptDec(c)) {
-        print(c);
-        _valueLen++;
-        _value *= 10;
-        _value += c - '0';
-        return;
-    }
-
-    State state;
-    if (isBackspace(c)) {
-        if (_valueLen > 0) {
-            backspace();
-            _value /= 10;
-            _valueLen--;
-            return;
-        }
-        state = CLI_DELETE;
-    } else if (isSpace(c) && _valueLen > 0) {
-        backspace(_valueLen);
-        setDec(_valueMax - 1, _value);
-        printDec(_value, _valueWidth);
         if (isNewline(c)) {
             println();
             state = CLI_NEWLINE;

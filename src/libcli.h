@@ -101,11 +101,11 @@ private:
     void processString(char c);
     void processHex(char c);
     void processDec(char c);
+    void processValue(char c, uint8_t base);
 
     void setHex(uint8_t digits, uint32_t defval);
     void setDec(uint32_t limit, uint32_t defval);
-    bool acceptHex(char c) const;
-    bool acceptDec(char c) const;
+    bool acceptValue(char c, uint8_t base) const;
 };
 
 extern class Cli Cli;
