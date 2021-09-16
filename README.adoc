@@ -1,3 +1,5 @@
+[![Compile Example](https://github.com/tgtakaoka/libcli/actions/workflows/compile-examples.yml/badge.svg)](https://github.com/tgtakaoka/libcli/actions/workflows/compile-examples.yml)
+
 = libcli for Arduino IDE =
 
 Support library to help implementing asynchronous command line

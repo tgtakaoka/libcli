@@ -1,0 +1,26 @@
+name: Compile Examples
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  compile-examples:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        fqbn:
+          - arduino:avr:nano
+          - arduino:megaavr:nona4809
+          - arduino:samd:nano_33_iot
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Compile Example
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: ${{ matrix.fqbn }}
+          libraries: |
+            -
