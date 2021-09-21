@@ -29,6 +29,43 @@ static void prompt() {
     cli.readLetter(handleCommand, 0);
 }
 
+/** handler for readDec32 */
+static void handleAdd(uint32_t value, uintptr_t extra, Cli::State state) {
+    static uint32_t last_num;
+#define ADD_LEFT 0
+#define ADD_RIGHT 1
+
+    if (state == Cli::State::CLI_CANCEL) {
+        prompt();
+        return;
+    }
+    if (state == Cli::State::CLI_DELETE) {
+        if (extra == ADD_LEFT)
+            return;
+        cli.backspace();
+        cli.readDec32(handleAdd, ADD_LEFT, last_num);
+        return;
+    }
+    if (extra == ADD_LEFT) {
+        last_num = value;
+        if (state == Cli::State::CLI_SPACE) {
+            cli.readDec32(handleAdd, ADD_RIGHT);
+            return;
+        }
+        value = 1;
+    }
+    if (state == Cli::State::CLI_SPACE)
+        cli.println();
+    cli.print(F("add integers: "));
+    cli.printDec32(last_num);
+    cli.print(F(" + "));
+    cli.printDec32(value);
+    cli.print(F(" = "));
+    cli.printDec32(last_num + value);
+    cli.println();
+    prompt();
+}
+
 /** handler for readHex16 and readDec8 */
 static void handleDump(uint32_t value, uintptr_t extra, Cli::State state) {
     static uint32_t last_addr;
@@ -127,6 +164,11 @@ static void handleCommand(char letter, uintptr_t extra) {
     if (letter == 's') {
         cli.print(F("step"));
     }
+    if (letter == 'a') {
+        cli.print(F("add "));
+        cli.readDec32(handleAdd, ADD_LEFT);
+        return;
+    }
     if (letter == 'd') {
         cli.print(F("dump "));
         cli.readHex16(handleDump, DUMP_ADDRESS);
@@ -147,6 +189,7 @@ static void handleCommand(char letter, uintptr_t extra) {
         cli.print(LIBCLI_VERSION_STRING);
         cli.println(F(") example"));
         cli.println(F("  ?: help"));
+        cli.println(F("  a: add"));
         cli.println(F("  s: step"));
         cli.println(F("  d: dump <address> <length>"));
         cli.println(F("  l: load <filename>"));
