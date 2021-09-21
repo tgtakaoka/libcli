@@ -27,7 +27,11 @@
 
 namespace libcli {
 
-class Cli : public Stream {
+namespace impl {
+class Impl;
+}
+
+class Cli final : public Stream {
 public:
     enum State : uint8_t {
         CLI_SPACE,    // an input is terminated by space.
@@ -79,10 +83,8 @@ public:
     int read() override;
     int peek() override;
 
-    struct Impl;
-
 private:
-    Impl &_impl;
+    impl::Impl &_impl;
 };
 
 extern class Cli Cli;
