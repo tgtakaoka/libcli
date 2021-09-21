@@ -26,13 +26,12 @@ namespace libcli {
 namespace impl {
 
 /** Implementation detail of libcli. */
-class Impl final {
-public:
+struct Impl final {
     static constexpr Impl &instance() { return _impl; }
 
     void begin(Stream &stream) {
         console = &stream;
-        _proc.processor = &impl::Impl::processNop;
+        setProcessor(&Impl::processNop, 0);
     }
 
     /** Delegate methods of Print. */
@@ -45,34 +44,19 @@ public:
     int read() { return console->read(); }
     int peek() { return console->peek(); }
 
-    struct {
-        void (Impl::*processor)(char c);
-        union {
-            Cli::LetterHandler letter;
-            Cli::StringHandler string;
-            Cli::ValueHandler value;
-        } handler;
-        uintptr_t extra;
-
-        void setHandler(Cli::LetterHandler handler, uintptr_t extra) {
-            this->processor = &impl::Impl::processLetter;
-            this->extra = extra;
-            this->handler.letter = handler;
-        }
-        void setHandler(Cli::StringHandler handler, uintptr_t extra) {
-            this->processor = &impl::Impl::processLetter;
-            this->extra = extra;
-            this->handler.string = handler;
-        }
-        void setHandler(Cli::ValueHandler handler, uintptr_t extra, void (Impl::*proc)(char)) {
-            this->processor = proc;
-            this->extra = extra;
-            this->handler.value = handler;
-        }
-        void process(char c, Impl &impl) {
-            (impl.*processor)(c);
-        }
-    } _proc;
+    void setHandler(Cli::LetterHandler handler, uintptr_t extra) {
+        this->handler.letter = handler;
+        setProcessor(&Impl::processLetter, extra);
+    }
+    void setHandler(Cli::StringHandler handler, uintptr_t extra) {
+        this->handler.string = handler;
+        setProcessor(&Impl::processLetter, extra);
+    }
+    void setHandler(Cli::ValueHandler handler, uintptr_t extra, void (Impl::*processor)(char)) {
+        this->handler.value = handler;
+        setProcessor(processor, extra);
+    }
+    void process(char c) { (this->*processor)(c); }
 
     struct {
         uint8_t len;
@@ -86,7 +70,7 @@ public:
         char buf[80];
     } _string;
 
-    void processLetter(char c);
+    void processLetter(char c) { handler.letter(c, extra); }
     void processString(char c);
     void processHex(char c);
     void processDec(char c);
@@ -110,6 +94,19 @@ public:
 
 private:
     Stream *console;
+
+    void setProcessor(void (Impl::*proc)(char), uintptr_t ext) {
+        processor = proc;
+        extra = ext;
+    }
+
+    void (Impl::*processor)(char c);
+    union {
+        Cli::LetterHandler letter;
+        Cli::StringHandler string;
+        Cli::ValueHandler value;
+    } handler;
+    uintptr_t extra;
 
     /** Hidden efault constructor. */
     Impl() {}

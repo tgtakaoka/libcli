@@ -73,17 +73,17 @@ size_t Cli::backspace(int8_t n) {
 }
 
 void Cli::readLetter(LetterHandler handler, uintptr_t extra) {
-    _impl._proc.setHandler(handler, extra);
+    _impl.setHandler(handler, extra);
 }
 
 void Cli::readString(StringHandler handler, uintptr_t extra) {
-    _impl._proc.setHandler(handler, extra);
+    _impl.setHandler(handler, extra);
     _impl._string.len = 0;
     _impl._string.buf[0] = 0;
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits) {
-    _impl._proc.setHandler(handler, extra, &impl::Impl::processHex);
+    _impl.setHandler(handler, extra, &impl::Impl::processHex);
     _impl.setHex(digits, 0);
     _impl._value.len = 0;
 }
@@ -95,13 +95,13 @@ void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_
 }
 
 void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit) {
-    _impl._proc.setHandler(handler, extra, &impl::Impl::processDec);
+    _impl.setHandler(handler, extra, &impl::Impl::processDec);
     _impl.setDec(limit, 0);
     _impl._value.len = 0;
 }
 
 void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
-    _impl._proc.setHandler(handler, extra, &impl::Impl::processDec);
+    _impl.setHandler(handler, extra, &impl::Impl::processDec);
     _impl.setDec(limit, defval);
     backspace(_impl._value.width);
     printDec(defval, _impl._value.width);
@@ -113,7 +113,7 @@ void Cli::begin(Stream &console) {
 
 void Cli::loop() {
     if (available()) {
-        _impl._proc.process(read(), _impl);
+        _impl.process(read());
     }
 }
 

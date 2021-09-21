@@ -98,14 +98,10 @@ void Impl::setDec(uint32_t max, uint32_t value) {
     _value.val = value;
 }
 
-void Impl::processLetter(char c) {
-    _proc.handler.letter(c, _proc.extra);
-}
-
 void Impl::processString(char c) {
     if (isNewline(c)) {
         console->println();
-        _proc.handler.string(_string.buf, _proc.extra, Cli::State::CLI_NEWLINE);
+        handler.string(_string.buf, extra, Cli::State::CLI_NEWLINE);
     } else if (isBackspace(c)) {
         if (_string.len > 0) {
             backspace();
@@ -113,7 +109,7 @@ void Impl::processString(char c) {
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));
-        _proc.handler.string(_string.buf, _proc.extra, Cli::State::CLI_CANCEL);
+        handler.string(_string.buf, extra, Cli::State::CLI_CANCEL);
     } else if (_string.len < sizeof(_string.buf) - 1) {
         console->print(c);
         _string.buf[_string.len++] = c;
@@ -182,7 +178,7 @@ void Impl::processValue(char c, uint8_t base) {
     } else {
         return;
     }
-    _proc.handler.value(_value.val, _proc.extra, state);
+    handler.value(_value.val, extra, state);
 }
 
 }  // namespace impl
