@@ -53,18 +53,11 @@ struct Impl final {
         str_buf[str_len = 0] = 0;
         setProcessor(&Impl::processString, extra);
     }
-    void setHandler(Cli::ValueHandler handler, uintptr_t extra, void (Impl::*processor)(char)) {
-        this->handler.value = handler;
-        setProcessor(processor, extra);
-    }
+    void setHexHandler(Cli::ValueHandler handler, uintptr_t extra, uint8_t digits);
+    void setHexHandler(Cli::ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval);
+    void setDecHandler(Cli::ValueHandler handler, uintptr_t extra, uint32_t max);
+    void setDecHandler(Cli::ValueHandler handler, uintptr_t extra, uint32_t max, uint32_t defval);
     void process(char c) { (this->*processor)(c); }
-
-    struct {
-        uint8_t len;
-        uint8_t width;
-        uint32_t val;
-        uint32_t max;
-    } _value;
 
     void processLetter(char c) { handler.letter(c, extra); }
     void processString(char c);
@@ -107,6 +100,13 @@ private:
     uint8_t str_len;
     char str_buf[80 + 1];
 
+public:
+    uint8_t val_len;
+    uint8_t val_width;
+    uint32_t val;
+    uint32_t val_max;
+
+private:
     /** Hidden efault constructor. */
     Impl() {}
 

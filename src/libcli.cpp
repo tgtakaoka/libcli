@@ -81,28 +81,19 @@ void Cli::readString(StringHandler handler, uintptr_t extra) {
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits) {
-    _impl.setHandler(handler, extra, &impl::Impl::processHex);
-    _impl.setHex(digits, 0);
-    _impl._value.len = 0;
+    _impl.setHexHandler(handler, extra, digits);
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval) {
-    _impl.setHex(digits, defval);
-    backspace(_impl._value.width);
-    printHex(defval, _impl._value.width);
+    _impl.setHexHandler(handler, extra, digits, defval);
 }
 
-void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit) {
-    _impl.setHandler(handler, extra, &impl::Impl::processDec);
-    _impl.setDec(limit, 0);
-    _impl._value.len = 0;
+void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t max) {
+    _impl.setDecHandler(handler, extra, max);
 }
 
-void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
-    _impl.setHandler(handler, extra, &impl::Impl::processDec);
-    _impl.setDec(limit, defval);
-    backspace(_impl._value.width);
-    printDec(defval, _impl._value.width);
+void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t max, uint32_t defval) {
+    _impl.setDecHandler(handler, extra, max, defval);
 }
 
 void Cli::begin(Stream &console) {

@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2021 Tadashi G. Takaoka
  *
@@ -84,18 +83,50 @@ size_t Impl::backspace(int8_t n) {
     return s;
 }
 
+void Impl::setHexHandler(Cli::ValueHandler handler, uintptr_t extra, uint8_t digits) {
+    this->handler.value = handler;
+    setProcessor(&Impl::processHex, extra);
+    setHex(digits, 0);
+    val_len = 0;
+}
+
+void Impl::setHexHandler(
+        Cli::ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval) {
+    this->handler.value = handler;
+    setProcessor(&Impl::processHex, extra);
+    setHex(digits, defval);
+    backspace(val_width);
+    printHex(defval, val_width);
+}
+
+void Impl::setDecHandler(Cli::ValueHandler handler, uintptr_t extra, uint32_t max) {
+    this->handler.value = handler;
+    setProcessor(&impl::Impl::processDec, extra);
+    setDec(max, 0);
+    val_len = 0;
+}
+
+void Impl::setDecHandler(
+        Cli::ValueHandler handler, uintptr_t extra, uint32_t max, uint32_t defval) {
+    this->handler.value = handler;
+    setProcessor(&impl::Impl::processDec, extra);
+    setDec(max, defval);
+    backspace(val_width);
+    printDec(defval, val_width);
+}
+
 void Impl::setHex(uint8_t digits, uint32_t value) {
     if (digits >= 8)
         digits = 8;
-    _value.width = _value.len = digits;
-    _value.max = (1L << digits * 4);  // 0 if digits is 8.
-    _value.val = value;
+    val_width = val_len = digits;
+    val_max = (1L << digits * 4);  // 0 if digits is 8.
+    val = value;
 }
 
 void Impl::setDec(uint32_t max, uint32_t value) {
-    _value.width = _value.len = decDigits(max);
-    _value.max = max + 1;
-    _value.val = value;
+    val_width = val_len = decDigits(max);
+    val_max = max + 1;
+    val = value;
 }
 
 void Impl::processString(char c) {
@@ -119,12 +150,12 @@ void Impl::processString(char c) {
 
 bool Impl::acceptValue(char c, uint8_t base) const {
     if (base == 16) {
-        return isHexadecimalDigit(c) && _value.len < _value.width;
+        return isHexadecimalDigit(c) && val_len < val_width;
     }
     if (isDigit(c)) {
-        const uint32_t limit = (_value.max == 0) ? 429496729L : _value.max / 10;
+        const uint32_t limit = (val_max == 0) ? 429496729L : val_max / 10;
         const uint8_t n = c - '0';
-        return _value.val < limit || (_value.val == limit && n < (_value.max % 10));
+        return val < limit || (val == limit && n < (val_max % 10));
     }
     return false;
 }
@@ -141,29 +172,29 @@ void Impl::processValue(char c, uint8_t base) {
     if (acceptValue(c, base)) {
         c = toUpperCase(c);
         console->print(c);
-        _value.len++;
-        _value.val *= base;
-        _value.val += isDigit(c) ? c - '0' : c - 'A' + 10;
+        val_len++;
+        val *= base;
+        val += isDigit(c) ? c - '0' : c - 'A' + 10;
         return;
     }
 
     Cli::State state;
     if (isBackspace(c)) {
-        if (_value.len > 0) {
+        if (val_len > 0) {
             backspace();
-            _value.val /= base;
-            _value.len--;
+            val /= base;
+            val_len--;
             return;
         }
         state = Cli::State::CLI_DELETE;
-    } else if (isSpace(c) && _value.len > 0) {
-        backspace(_value.len);
+    } else if (isSpace(c) && val_len > 0) {
+        backspace(val_len);
         if (base == 10) {
-            setDec(_value.max, _value.val);
-            printDec(_value.val, _value.width);
+            setDec(val_max, val);
+            printDec(val, val_width);
         } else {
-            setHex(_value.width, _value.val);
-            printHex(_value.val, _value.width);
+            setHex(val_width, val);
+            printHex(val, val_width);
         }
         if (isNewline(c)) {
             console->println();
@@ -178,7 +209,7 @@ void Impl::processValue(char c, uint8_t base) {
     } else {
         return;
     }
-    handler.value(_value.val, extra, state);
+    handler.value(val, extra, state);
 }
 
 }  // namespace impl
