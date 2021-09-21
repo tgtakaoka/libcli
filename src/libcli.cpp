@@ -80,20 +80,20 @@ void Cli::readString(StringHandler handler, uintptr_t extra) {
     _impl.setHandler(handler, extra);
 }
 
-void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits) {
-    _impl.setHexHandler(handler, extra, digits);
+void Cli::readHex(ValueHandler handler, uintptr_t extra, uint32_t limit) {
+    _impl.setHandler(handler, extra, limit, 16);
 }
 
-void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval) {
-    _impl.setHexHandler(handler, extra, digits, defval);
+void Cli::readHex(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
+    _impl.setHandler(handler, extra, limit, defval, 16);
 }
 
-void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t max) {
-    _impl.setDecHandler(handler, extra, max);
+void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit) {
+    _impl.setHandler(handler, extra, limit, 10);
 }
 
-void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t max, uint32_t defval) {
-    _impl.setDecHandler(handler, extra, max, defval);
+void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
+    _impl.setHandler(handler, extra, limit, defval, 10);
 }
 
 void Cli::begin(Stream &console) {

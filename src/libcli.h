@@ -60,12 +60,12 @@ public:
     void readLetter(LetterHandler handler, uintptr_t extra);
     /** Read a string delimitted by newline. */
     void readString(StringHandler hadler, uintptr_t extra);
-    /** Read hexadecimal number in |digits| format. */
-    void readHex(ValueHandler handler, uintptr_t extra, uint8_t digits);
-    /** Read hexadecimal number in |digits| format with |defval| as default. */
-    void readHex(ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval);
+    /** Read hexadecimal number less or equals to |limit|. */
+    void readHex(ValueHandler handler, uintptr_t extra, uint32_t limit = UINT32_MAX);
+    /** Read hexadecimal number less or equals to |limit| with |defval| as default. */
+    void readHex(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval);
     /** Read decimal number less or equal to |limit|. */
-    void readDec(ValueHandler handler, uintptr_t extra, uint32_t limit);
+    void readDec(ValueHandler handler, uintptr_t extra, uint32_t limit = UINT32_MAX);
     /** Read decimal number less or equal to |limit| with |defval| as default. */
     void readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval);
 

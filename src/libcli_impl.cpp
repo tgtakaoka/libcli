@@ -40,36 +40,26 @@ static bool isNewline(char c) {
     return c == '\n' || c == '\r';
 }
 
-/** Returns number of hexadecimal digits of |value|. */
-static uint8_t hexDigits(uint32_t value) {
+/** Returns number of digits of |value| in |base|. */
+static uint8_t getDigits(uint32_t value, uint8_t base) {
     uint8_t n = 0;
     do {
         n++;
-        value >>= 4;
+        value /= base;
     } while (value);
     return n;
 }
 
 size_t Impl::printHex(uint32_t value, uint8_t width) {
-    for (uint8_t n = hexDigits(value); n < width; n++) {
+    for (uint8_t n = getDigits(value, 16); n < width; n++) {
         console->print('0');
     }
     console->print(value, HEX);
     return width;
 }
 
-/** Returns number of decimal digits of |value|. */
-static uint8_t decDigits(uint32_t value) {
-    uint8_t n = 0;
-    do {
-        n++;
-        value /= 10;
-    } while (value);
-    return n;
-}
-
 size_t Impl::printDec(uint32_t value, uint8_t width) {
-    for (uint8_t n = decDigits(value); n < width; n++) {
+    for (uint8_t n = getDigits(value, 10); n < width; n++) {
         console->print(' ');
     }
     console->print(value, DEC);
@@ -78,55 +68,9 @@ size_t Impl::printDec(uint32_t value, uint8_t width) {
 
 size_t Impl::backspace(int8_t n) {
     size_t s = 0;
-    while (n-- > 0)
+    while (n--)
         s += console->print(F("\b \b"));
     return s;
-}
-
-void Impl::setHexHandler(Cli::ValueHandler handler, uintptr_t extra, uint8_t digits) {
-    this->handler.value = handler;
-    setProcessor(&Impl::processHex, extra);
-    setHex(digits, 0);
-    val_len = 0;
-}
-
-void Impl::setHexHandler(
-        Cli::ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval) {
-    this->handler.value = handler;
-    setProcessor(&Impl::processHex, extra);
-    setHex(digits, defval);
-    backspace(val_width);
-    printHex(defval, val_width);
-}
-
-void Impl::setDecHandler(Cli::ValueHandler handler, uintptr_t extra, uint32_t max) {
-    this->handler.value = handler;
-    setProcessor(&impl::Impl::processDec, extra);
-    setDec(max, 0);
-    val_len = 0;
-}
-
-void Impl::setDecHandler(
-        Cli::ValueHandler handler, uintptr_t extra, uint32_t max, uint32_t defval) {
-    this->handler.value = handler;
-    setProcessor(&impl::Impl::processDec, extra);
-    setDec(max, defval);
-    backspace(val_width);
-    printDec(defval, val_width);
-}
-
-void Impl::setHex(uint8_t digits, uint32_t value) {
-    if (digits >= 8)
-        digits = 8;
-    val_width = val_len = digits;
-    val_max = (1L << digits * 4);  // 0 if digits is 8.
-    val = value;
-}
-
-void Impl::setDec(uint32_t max, uint32_t value) {
-    val_width = val_len = decDigits(max);
-    val_max = max + 1;
-    val = value;
 }
 
 void Impl::processString(char c) {
@@ -134,7 +78,7 @@ void Impl::processString(char c) {
         console->println();
         handler.string(str_buf, extra, Cli::State::CLI_NEWLINE);
     } else if (isBackspace(c)) {
-        if (str_len > 0) {
+        if (str_len) {
             str_buf[--str_len] = 0;
             backspace();
         }
@@ -148,59 +92,74 @@ void Impl::processString(char c) {
     }
 }
 
-bool Impl::acceptValue(char c, uint8_t base) const {
-    if (base == 16) {
-        return isHexadecimalDigit(c) && val_len < val_width;
+void Impl::setHandler(Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint8_t base) {
+    this->handler.value = handler;
+    val_width = getDigits(val_limit = limit, val_base = base);
+    val_value = 0;
+    val_len = 0;
+    setProcessor(&Impl::processValue, extra);
+}
+
+void Impl::setHandler(
+        Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint32_t defval, uint8_t base) {
+    backspace(val_width);
+    setHandler(handler, extra, limit, base);
+    val_value = defval;
+    val_len = val_width;
+    if (base == 10) {
+        printDec(val_value, val_len);
+    } else {
+        printHex(val_value, val_len);
     }
-    if (isDigit(c)) {
-        const uint32_t limit = (val_max == 0) ? 429496729L : val_max / 10;
-        const uint8_t n = c - '0';
-        return val < limit || (val == limit && n < (val_max % 10));
+}
+
+bool Impl::checkLimit(char c, uint8_t &n) const {
+    c = toUpperCase(c);
+    if (val_base == 10 && isDigit(c)) {
+        n = c - '0';
+        const uint32_t limit = val_limit / 10;
+        return val_value < limit || (val_value == limit && n <= (val_limit % 10));
+    }
+    if (val_base == 16 && isHexadecimalDigit(c)) {
+        n = c - 'A' + 10;
+        const uint32_t limit = val_limit / 16;
+        return val_value < limit || (val_value == limit && n <= (val_limit % 16));
     }
     return false;
 }
 
-void Impl::processHex(char c) {
-    processValue(c, 16);
-}
-
-void Impl::processDec(char c) {
-    processValue(c, 10);
-}
-
-void Impl::processValue(char c, uint8_t base) {
-    if (acceptValue(c, base)) {
-        c = toUpperCase(c);
-        console->print(c);
+void Impl::processValue(char c) {
+    uint8_t n;
+    if (checkLimit(c, n)) {
+        val_value *= val_base;
+        val_value += n;
         val_len++;
-        val *= base;
-        val += isDigit(c) ? c - '0' : c - 'A' + 10;
+        console->print(c);
         return;
     }
 
     Cli::State state;
     if (isBackspace(c)) {
-        if (val_len > 0) {
-            backspace();
-            val /= base;
+        if (val_len) {
+            val_value /= val_base;
             val_len--;
+            backspace();
             return;
         }
         state = Cli::State::CLI_DELETE;
-    } else if (isSpace(c) && val_len > 0) {
+    } else if (isSpace(c) && val_len) {
         backspace(val_len);
-        if (base == 10) {
-            setDec(val_max, val);
-            printDec(val, val_width);
+        val_len = val_width;
+        if (val_base == 10) {
+            printDec(val_value, val_len);
         } else {
-            setHex(val_width, val);
-            printHex(val, val_width);
+            printHex(val_value, val_len);
         }
         if (isNewline(c)) {
             console->println();
             state = Cli::State::CLI_NEWLINE;
         } else {
-            console->print(' ');
+            console->print(c);
             state = Cli::State::CLI_SPACE;
         }
     } else if (isCancel(c)) {
@@ -209,7 +168,7 @@ void Impl::processValue(char c, uint8_t base) {
     } else {
         return;
     }
-    handler.value(val, extra, state);
+    handler.value(val_value, extra, state);
 }
 
 }  // namespace impl

@@ -53,25 +53,15 @@ struct Impl final {
         str_buf[str_len = 0] = 0;
         setProcessor(&Impl::processString, extra);
     }
-    void setHexHandler(Cli::ValueHandler handler, uintptr_t extra, uint8_t digits);
-    void setHexHandler(Cli::ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval);
-    void setDecHandler(Cli::ValueHandler handler, uintptr_t extra, uint32_t max);
-    void setDecHandler(Cli::ValueHandler handler, uintptr_t extra, uint32_t max, uint32_t defval);
+    void setHandler(Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint8_t base);
+    void setHandler(Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint32_t defval,
+            uint8_t base);
+
     void process(char c) { (this->*processor)(c); }
 
-    void processLetter(char c) { handler.letter(c, extra); }
-    void processString(char c);
-    void processHex(char c);
-    void processDec(char c);
-    void processValue(char c, uint8_t base);
-
-    void setHex(uint8_t digits, uint32_t value);
-    void setDec(uint32_t max, uint32_t value);
-    bool acceptValue(char c, uint8_t base) const;
-
     size_t backspace(int8_t n = 1);
-    size_t printHex(uint32_t value, uint8_t width);
-    size_t printDec(uint32_t value, uint8_t width);
+    size_t printHex(uint32_t value, uint8_t width = 0);
+    size_t printDec(uint32_t value, uint8_t width = 0);
 
     /** The singleton of Impl. */
     static Impl _impl;
@@ -100,17 +90,21 @@ private:
     uint8_t str_len;
     char str_buf[80 + 1];
 
-public:
+    uint32_t val_limit;
+    uint32_t val_value;
+    uint8_t val_base;
     uint8_t val_len;
     uint8_t val_width;
-    uint32_t val;
-    uint32_t val_max;
 
 private:
     /** Hidden efault constructor. */
     Impl() {}
 
     void processNop(char c) { (void)c; }
+    void processLetter(char c) { handler.letter(c, extra); }
+    void processString(char c);
+    void processValue(char c);
+    bool checkLimit(char c, uint8_t &n) const;
 };
 
 }  // namespace impl
