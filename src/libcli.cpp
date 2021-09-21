@@ -78,8 +78,6 @@ void Cli::readLetter(LetterHandler handler, uintptr_t extra) {
 
 void Cli::readString(StringHandler handler, uintptr_t extra) {
     _impl.setHandler(handler, extra);
-    _impl._string.len = 0;
-    _impl._string.buf[0] = 0;
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits) {

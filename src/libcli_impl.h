@@ -36,7 +36,7 @@ struct Impl final {
 
     /** Delegate methods of Print. */
     size_t write(uint8_t val) { return console->write(val); }
-    size_t write(const uint8_t *buffer, size_t size) { return console->write(buffer, size); }
+    size_t write(const uint8_t *buf, size_t size) { return console->write(buf, size); }
     int availableForWrite() { return console->availableForWrite(); }
 
     /** Delegate methods of Stream. */
@@ -50,7 +50,8 @@ struct Impl final {
     }
     void setHandler(Cli::StringHandler handler, uintptr_t extra) {
         this->handler.string = handler;
-        setProcessor(&Impl::processLetter, extra);
+        str_buf[str_len = 0] = 0;
+        setProcessor(&Impl::processString, extra);
     }
     void setHandler(Cli::ValueHandler handler, uintptr_t extra, void (Impl::*processor)(char)) {
         this->handler.value = handler;
@@ -64,11 +65,6 @@ struct Impl final {
         uint32_t val;
         uint32_t max;
     } _value;
-
-    struct {
-        uint8_t len;
-        char buf[80];
-    } _string;
 
     void processLetter(char c) { handler.letter(c, extra); }
     void processString(char c);
@@ -107,6 +103,9 @@ private:
         Cli::ValueHandler value;
     } handler;
     uintptr_t extra;
+
+    uint8_t str_len;
+    char str_buf[80 + 1];
 
     /** Hidden efault constructor. */
     Impl() {}

@@ -101,19 +101,19 @@ void Impl::setDec(uint32_t max, uint32_t value) {
 void Impl::processString(char c) {
     if (isNewline(c)) {
         console->println();
-        handler.string(_string.buf, extra, Cli::State::CLI_NEWLINE);
+        handler.string(str_buf, extra, Cli::State::CLI_NEWLINE);
     } else if (isBackspace(c)) {
-        if (_string.len > 0) {
+        if (str_len > 0) {
+            str_buf[--str_len] = 0;
             backspace();
-            _string.buf[--_string.len] = 0;
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));
-        handler.string(_string.buf, extra, Cli::State::CLI_CANCEL);
-    } else if (_string.len < sizeof(_string.buf) - 1) {
+        handler.string(str_buf, extra, Cli::State::CLI_CANCEL);
+    } else if (str_len < sizeof(str_buf) - 1) {
+        str_buf[str_len++] = c;
+        str_buf[str_len] = 0;
         console->print(c);
-        _string.buf[_string.len++] = c;
-        _string.buf[_string.len] = 0;
     }
 }
 
