@@ -73,61 +73,47 @@ size_t Cli::backspace(int8_t n) {
 }
 
 void Cli::readLetter(LetterHandler handler, uintptr_t extra) {
-    _impl._proc.processor = &impl::Impl::processLetter;
-    _impl._proc.handler.letter = handler;
-    _impl._proc.extra = extra;
+    _impl._proc.setHandler(handler, extra);
 }
 
 void Cli::readString(StringHandler handler, uintptr_t extra) {
-    _impl._proc.processor = &impl::Impl::processString;
-    _impl._proc.handler.string = handler;
-    _impl._proc.extra = extra;
+    _impl._proc.setHandler(handler, extra);
     _impl._string.len = 0;
     _impl._string.buf[0] = 0;
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits) {
-    _impl._proc.processor = &impl::Impl::processHex;
-    _impl._proc.handler.value = handler;
-    _impl._proc.extra = extra;
+    _impl._proc.setHandler(handler, extra, &impl::Impl::processHex);
     _impl.setHex(digits, 0);
     _impl._value.len = 0;
 }
 
 void Cli::readHex(ValueHandler handler, uintptr_t extra, uint8_t digits, uint32_t defval) {
-    _impl._proc.processor = &impl::Impl::processHex;
-    _impl._proc.handler.value = handler;
-    _impl._proc.extra = extra;
     _impl.setHex(digits, defval);
     backspace(_impl._value.width);
     printHex(defval, _impl._value.width);
 }
 
 void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit) {
-    _impl._proc.processor = &impl::Impl::processDec;
-    _impl._proc.handler.value = handler;
-    _impl._proc.extra = extra;
+    _impl._proc.setHandler(handler, extra, &impl::Impl::processDec);
     _impl.setDec(limit, 0);
     _impl._value.len = 0;
 }
 
 void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
-    _impl._proc.processor = &impl::Impl::processDec;
-    _impl._proc.handler.value = handler;
-    _impl._proc.extra = extra;
+    _impl._proc.setHandler(handler, extra, &impl::Impl::processDec);
     _impl.setDec(limit, defval);
     backspace(_impl._value.width);
     printDec(defval, _impl._value.width);
 }
 
 void Cli::begin(Stream &console) {
-    _impl.console = &console;
-    _impl._proc.processor = &impl::Impl::processNop;
+    _impl.begin(console);
 }
 
 void Cli::loop() {
     if (available()) {
-        (_impl.*_impl._proc.processor)(read());
+        _impl._proc.process(read(), _impl);
     }
 }
 

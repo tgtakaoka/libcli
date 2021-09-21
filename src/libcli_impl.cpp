@@ -41,38 +41,6 @@ static bool isNewline(char c) {
     return c == '\n' || c == '\r';
 }
 
-/**
- * Virual methods of Print class.
- */
-
-size_t Impl::write(uint8_t val) {
-    return console->write(val);
-}
-
-size_t Impl::write(const uint8_t *buffer, size_t size) {
-    return console->write(buffer, size);
-}
-
-int Impl::availableForWrite() {
-    return console->availableForWrite();
-}
-
-/**
- * Virtual methods of Stream class.
- */
-
-int Impl::available() {
-    return console->available();
-}
-
-int Impl::read() {
-    return console->read();
-}
-
-int Impl::peek() {
-    return console->peek();
-}
-
 /** Returns number of hexadecimal digits of |value|. */
 static uint8_t hexDigits(uint32_t value) {
     uint8_t n = 0;

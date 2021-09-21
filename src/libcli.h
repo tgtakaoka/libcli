@@ -96,6 +96,7 @@ private:
     impl::Impl &_impl;
 
     /** The singleton is implemented in Cli::instance(). */
+    friend class impl::Impl;
     Cli(impl::Impl &impl) : Stream(), _impl(impl) {}
 };
 

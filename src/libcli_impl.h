@@ -26,11 +26,24 @@ namespace libcli {
 namespace impl {
 
 /** Implementation detail of libcli. */
-class Impl final : public Stream {
+class Impl final {
 public:
-    static Impl &instance() { return _impl; }
+    static constexpr Impl &instance() { return _impl; }
 
-    Stream *console;
+    void begin(Stream &stream) {
+        console = &stream;
+        _proc.processor = &impl::Impl::processNop;
+    }
+
+    /** Delegate methods of Print. */
+    size_t write(uint8_t val) { return console->write(val); }
+    size_t write(const uint8_t *buffer, size_t size) { return console->write(buffer, size); }
+    int availableForWrite() { return console->availableForWrite(); }
+
+    /** Delegate methods of Stream. */
+    int available() { return console->available(); }
+    int read() { return console->read(); }
+    int peek() { return console->peek(); }
 
     struct {
         void (Impl::*processor)(char c);
@@ -40,6 +53,25 @@ public:
             Cli::ValueHandler value;
         } handler;
         uintptr_t extra;
+
+        void setHandler(Cli::LetterHandler handler, uintptr_t extra) {
+            this->processor = &impl::Impl::processLetter;
+            this->extra = extra;
+            this->handler.letter = handler;
+        }
+        void setHandler(Cli::StringHandler handler, uintptr_t extra) {
+            this->processor = &impl::Impl::processLetter;
+            this->extra = extra;
+            this->handler.string = handler;
+        }
+        void setHandler(Cli::ValueHandler handler, uintptr_t extra, void (Impl::*proc)(char)) {
+            this->processor = proc;
+            this->extra = extra;
+            this->handler.value = handler;
+        }
+        void process(char c, Impl &impl) {
+            (impl.*processor)(c);
+        }
     } _proc;
 
     struct {
@@ -54,7 +86,6 @@ public:
         char buf[80];
     } _string;
 
-    void processNop(char c) { (void)c; }
     void processLetter(char c);
     void processString(char c);
     void processHex(char c);
@@ -69,24 +100,21 @@ public:
     size_t printHex(uint32_t value, uint8_t width);
     size_t printDec(uint32_t value, uint8_t width);
 
-    /** Virtual methods of Print. */
-    size_t write(uint8_t val) override;
-    size_t write(const uint8_t *buffer, size_t size) override;
-    int availableForWrite() override;
-
-    /** Virtual methods of Stream. */
-    int available() override;
-    int read() override;
-    int peek() override;
-
     /** The singleton of Impl. */
     static Impl _impl;
-    Impl() : Stream() {}
 
     /** No copy constructor. */
     Impl(Impl const &) = delete;
     /** No assignment operator. */
     void operator=(Impl const &) = delete;
+
+private:
+    Stream *console;
+
+    /** Hidden efault constructor. */
+    Impl() {}
+
+    void processNop(char c) { (void)c; }
 };
 
 }  // namespace impl
