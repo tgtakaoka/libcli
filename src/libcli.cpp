@@ -76,7 +76,15 @@ void Cli::readLetter(LetterHandler handler, uintptr_t extra) {
     _impl.setHandler(handler, extra);
 }
 
-void Cli::readString(StringHandler handler, uintptr_t extra) {
+void Cli::readWord(StringHandler handler, uintptr_t extra) {
+    _impl.setHandler(handler, extra, true);
+}
+
+void Cli::readWord(StringHandler handler, uintptr_t extra, const char *defval) {
+    _impl.setHandler(handler, extra, true, defval);
+}
+
+void Cli::readLine(StringHandler handler, uintptr_t extra) {
     _impl.setHandler(handler, extra);
 }
 

@@ -197,12 +197,53 @@ static void handleMemory(uint32_t value, uintptr_t extra, State state) {
     prompt();
 }
 
-/** handler for readString */
-static void handleLoad(const char *string, uintptr_t extra, State state) {
+/** handler for readLine */
+static void handleLoad(const char *line, uintptr_t extra, State state) {
     (void)extra;
     if (state != State::CLI_CANCEL) {
-        Cli.print(F("load file: "));
-        Cli.print(string);
+        Cli.print(F("load file: '"));
+        Cli.print(line);
+        Cli.println('\'');
+    }
+    prompt();
+}
+
+/** handler for readWord */
+static constexpr size_t WORD_LEN = 10;
+
+static void handleWord(const char *word, uintptr_t extra, State state) {
+    static char words[4][WORD_LEN + 1];
+    static constexpr size_t WORD_MAX = sizeof(words) / sizeof(words[0]);
+
+    if (state == State::CLI_CANCEL) {
+        prompt();
+        return;
+    }
+    size_t index = extra;
+    if (state == State::CLI_DELETE) {
+        if (index != 0) {
+            Cli.backspace();
+            index--;
+            Cli.readWord(handleWord, index, words[index]);
+        }
+        return;
+    }
+
+    strncpy(words[index++], word, WORD_LEN);
+    if (state == State::CLI_SPACE) {
+        if (index < WORD_MAX) {
+            Cli.readWord(handleWord, index);
+            return;
+        }
+        Cli.println();
+    }
+
+    for (size_t i = 0; i < index; i++) {
+        Cli.print(F("  word "));
+        Cli.printDec(i + 1);
+        Cli.print(F(": '"));
+        Cli.print(words[i]);
+        Cli.println('\'');
     }
     prompt();
 }
@@ -222,14 +263,19 @@ static void handleCommand(char letter, uintptr_t extra) {
         Cli.readHex(handleAddHex, ADD_LEFT, HEX_LIMIT);
         return;
     }
+    if (letter == 'l') {
+        Cli.print(F("load "));
+        Cli.readLine(handleLoad, 0);
+        return;
+    }
+    if (letter == 'w') {
+        Cli.print(F("word "));
+        Cli.readWord(handleWord, 0);
+        return;
+    }
     if (letter == 'd') {
         Cli.print(F("dump "));
         Cli.readHex(handleDump, DUMP_ADDRESS, DUMP_ADDR_LIMIT);
-        return;
-    }
-    if (letter == 'l') {
-        Cli.print(F("load "));
-        Cli.readString(handleLoad, 0);
         return;
     }
     if (letter == 'm') {
@@ -245,8 +291,9 @@ static void handleCommand(char letter, uintptr_t extra) {
         Cli.println(F("  s: step"));
         Cli.println(F("  a: add decimal"));
         Cli.println(F("  h: add hexadecimal"));
-        Cli.println(F("  d: dump <address> <length>"));
         Cli.println(F("  l: load <filename>"));
+        Cli.println(F("  w: word <word>..."));
+        Cli.println(F("  d: dump <address> <length>"));
         Cli.print(F("  m: memory <address> <byte>..."));
     }
     Cli.println();

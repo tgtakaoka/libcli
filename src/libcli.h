@@ -58,8 +58,12 @@ public:
 
     /** Read a single letter. */
     void readLetter(LetterHandler handler, uintptr_t extra);
+    /** Read a string delimitted by space. */
+    void readWord(StringHandler hadler, uintptr_t extra);
+    /** Read a string delimitted by space with |defval| as default. */
+    void readWord(StringHandler hadler, uintptr_t extra, const char *defval);
     /** Read a string delimitted by newline. */
-    void readString(StringHandler hadler, uintptr_t extra);
+    void readLine(StringHandler hadler, uintptr_t extra);
     /** Read hexadecimal number less or equals to |limit|. */
     void readHex(ValueHandler handler, uintptr_t extra, uint32_t limit = UINT32_MAX);
     /** Read hexadecimal number less or equals to |limit| with |defval| as default. */

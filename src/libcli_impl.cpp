@@ -17,6 +17,7 @@
 #include "libcli_impl.h"
 
 #include <stdint.h>
+#include <string.h>
 #include "libcli.h"
 
 using namespace libcli;
@@ -74,14 +75,44 @@ size_t Impl::backspace(int8_t n) {
     return s;
 }
 
+void Impl::setHandler(Cli::LetterHandler handler, uintptr_t extra) {
+    this->handler.letter = handler;
+    setProcessor(&Impl::processLetter, extra);
+}
+
+void Impl::processLetter(char c) {
+    handler.letter(c, extra);
+}
+
+void Impl::setHandler(Cli::StringHandler handler, uintptr_t extra, bool word, const char *defval) {
+    this->handler.string = handler;
+    if (defval) {
+        strncpy(str_buf, defval, sizeof(str_buf) - 1);
+    } else {
+        str_buf[0] = 0;
+    }
+    str_len = strlen(str_buf);
+    str_word = word;
+    setProcessor(&Impl::processString, extra);
+}
+
 void Impl::processString(char c) {
     if (isNewline(c)) {
-        console->println();
-        handler.string(str_buf, extra, State::CLI_NEWLINE);
+        if (str_len || !str_word) { // can't accept empty word
+            console->println();
+            handler.string(str_buf, extra, State::CLI_NEWLINE);
+        }
+    } else if (isSpace(c) && str_word) {
+        if (str_len) {          // can't accept leading spaces in word
+            console->print(c);
+            handler.string(str_buf, extra, State::CLI_SPACE);
+        }
     } else if (isBackspace(c)) {
         if (str_len) {
             str_buf[--str_len] = 0;
             backspace();
+        } else if (str_word) {
+            handler.string(str_buf, extra, State::CLI_DELETE);
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));

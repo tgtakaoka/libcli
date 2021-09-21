@@ -44,15 +44,9 @@ struct Impl final {
     int read() { return console->read(); }
     int peek() { return console->peek(); }
 
-    void setHandler(Cli::LetterHandler handler, uintptr_t extra) {
-        this->handler.letter = handler;
-        setProcessor(&Impl::processLetter, extra);
-    }
-    void setHandler(Cli::StringHandler handler, uintptr_t extra) {
-        this->handler.string = handler;
-        str_buf[str_len = 0] = 0;
-        setProcessor(&Impl::processString, extra);
-    }
+    void setHandler(Cli::LetterHandler handler, uintptr_t extra);
+    void setHandler(Cli::StringHandler handler, uintptr_t extra, bool word = false,
+            const char *defval = nullptr);
     void setHandler(Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint8_t base);
     void setHandler(Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint32_t defval,
             uint8_t base);
@@ -88,6 +82,7 @@ private:
     uintptr_t extra;
 
     uint8_t str_len;
+    bool str_word;
     char str_buf[80 + 1];
 
     uint32_t val_limit;
@@ -101,7 +96,7 @@ private:
     Impl() {}
 
     void processNop(char c) { (void)c; }
-    void processLetter(char c) { handler.letter(c, extra); }
+    void processLetter(char c);
     void processString(char c);
     void processValue(char c);
     bool checkLimit(char c, uint8_t &n) const;
