@@ -18,7 +18,7 @@
 
 #define Console Serial
 
-using libcli::Cli;
+libcli::Cli &Cli = libcli::Cli::instance();
 typedef libcli::Cli::State State;
 
 static void handleCommand(char letter, uintptr_t extra);

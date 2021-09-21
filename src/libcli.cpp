@@ -22,29 +22,26 @@
 
 namespace libcli {
 
-/**
- * Global variables.
- */
-class Cli Cli;
-static impl::Impl gImpl;
-
-/** Default constructor. */
-Cli::Cli() : _impl(gImpl) {}
+Cli &Cli::instance() {
+    /** The singleton of Cli. */
+    static Cli cli{impl::Impl::instance()};
+    return cli;
+}
 
 /**
  * Virual methods of Print class.
  */
 
 size_t Cli::write(uint8_t val) {
-    return _impl.console->write(val);
+    return _impl.write(val);
 }
 
 size_t Cli::write(const uint8_t *buffer, size_t size) {
-    return _impl.console->write(buffer, size);
+    return _impl.write(buffer, size);
 }
 
 int Cli::availableForWrite() {
-    return _impl.console->availableForWrite();
+    return _impl.availableForWrite();
 }
 
 /**
@@ -52,15 +49,15 @@ int Cli::availableForWrite() {
  */
 
 int Cli::available() {
-    return _impl.console->available();
+    return _impl.available();
 }
 
 int Cli::read() {
-    return _impl.console->read();
+    return _impl.read();
 }
 
 int Cli::peek() {
-    return _impl.console->peek();
+    return _impl.peek();
 }
 
 size_t Cli::printHex(uint32_t value, uint8_t width) {

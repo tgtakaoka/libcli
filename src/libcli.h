@@ -31,8 +31,17 @@ namespace impl {
 class Impl;
 }
 
+/** Library interface of libcli. */
 class Cli final : public Stream {
 public:
+    /** Get the singleton instance. */
+    static Cli &instance();
+    /** Initialize with |console| as command line interface. */
+    void begin(Stream &console);
+    /** Event loop; shold be called in Sketch's main loop(). */
+    void loop();
+
+    /** A state what terminates user input. */
     enum State : uint8_t {
         CLI_SPACE,    // an input is terminated by space.
         CLI_NEWLINE,  // an input is terminated by newline.
@@ -46,13 +55,6 @@ public:
     typedef void (*StringHandler)(const char *string, uintptr_t extra, State state);
     /** Callback function of |readHex| and |readDec|. */
     typedef void (*ValueHandler)(uint32_t value, uintptr_t extra, State state);
-
-    /** Default constructor. */
-    Cli();
-    /** Initialize with |console| as command line interface. */
-    void begin(Stream &console);
-    /** Event loop; shold be called in Sketch's main loop(). */
-    void loop();
 
     /** Read a single letter. */
     void readLetter(LetterHandler handler, uintptr_t extra);
@@ -78,16 +80,24 @@ public:
     size_t write(uint8_t val) override;
     size_t write(const uint8_t *buffer, size_t size) override;
     int availableForWrite() override;
+
     /** Virtual methods of Stream. */
     int available() override;
     int read() override;
     int peek() override;
 
-private:
-    impl::Impl &_impl;
-};
+    /** No copy constructor. */
+    Cli(Cli const &) = delete;
+    /** No assignment operator. */
+    void operator=(Cli const &) = delete;
 
-extern class Cli Cli;
+private:
+    /** Implemetation detail. */
+    impl::Impl &_impl;
+
+    /** The singleton is implemented in Cli::instance(). */
+    Cli(impl::Impl &impl) : Stream(), _impl(impl) {}
+};
 
 }  // namespace libcli
 

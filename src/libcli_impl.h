@@ -25,8 +25,11 @@
 namespace libcli {
 namespace impl {
 
-class Impl final {
+/** Implementation detail of libcli. */
+class Impl final : public Stream {
 public:
+    static Impl &instance() { return _impl; }
+
     Stream *console;
 
     struct {
@@ -65,6 +68,25 @@ public:
     size_t backspace(int8_t n = 1);
     size_t printHex(uint32_t value, uint8_t width);
     size_t printDec(uint32_t value, uint8_t width);
+
+    /** Virtual methods of Print. */
+    size_t write(uint8_t val) override;
+    size_t write(const uint8_t *buffer, size_t size) override;
+    int availableForWrite() override;
+
+    /** Virtual methods of Stream. */
+    int available() override;
+    int read() override;
+    int peek() override;
+
+    /** The singleton of Impl. */
+    static Impl _impl;
+    Impl() : Stream() {}
+
+    /** No copy constructor. */
+    Impl(Impl const &) = delete;
+    /** No assignment operator. */
+    void operator=(Impl const &) = delete;
 };
 
 }  // namespace impl
