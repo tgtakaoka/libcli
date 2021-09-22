@@ -8,7 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        example: [./examples/cli/]
+        example:
+          - ./examples/cli/cli.ino
 
     steps:
       - uses: actions/checkout@v2
@@ -31,5 +32,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade platformio
       - name: Run PlatformIO
-        run: pio run -e promicro16 -e nano_every -e nano_33_iot
-        working-directory: ${{ matrix.example }}
+        run: pio ci --lib="." --board=sparkfun_promicro16 --board=nano_every --board=nano_33_iot
+        env:
+          PLATFORMIO_CI_SRC: ${{ matrix.example }}
