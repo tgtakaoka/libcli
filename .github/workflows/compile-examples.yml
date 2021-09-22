@@ -22,5 +22,6 @@ jobs:
         uses: arduino/compile-sketches@v1
         with:
           fqbn: ${{ matrix.fqbn }}
-          libraries: |
-            -
+          sketch-paths: |
+            - examples
+
