@@ -1,4 +1,5 @@
 image:https://github.com/tgtakaoka/libcli/actions/workflows/compile-examples.yml/badge.svg[link="https://github.com/tgtakaoka/libcli/actions/workflows/compile-examples.yml"]
+image:https://github.com/tgtakaoka/libcli/actions/workflows/platformio-ci.yml/badge.svg[https://github.com/tgtakaoka/libcli/actions/workflows/platformio-ci.yml]
 
 = libcli for Arduino IDE =
 
