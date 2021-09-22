@@ -5,5 +5,56 @@ image:https://github.com/tgtakaoka/libcli/actions/workflows/compile-examples.yml
 Support library to help implementing asynchronous command line
 interface.
 
+Because Arduino API for serial console is mostly synchronous and
+blocking, it is not easy to write a sketch which accepts human
+interaction from serial console while controlling hardware etc.  Of
+course we can use `Serial.available()` in `loop()` and carefully use
+`Serial.read()` not to block program flow.
+
+So `libcli` library comes for help. This library offers a command line
+instance which can
+
+* read a letter, text string, decimal and hexadecimal input
+  from serial console asynchronously.
+* act as `Stream` and do any form of `print()` and `println()`.
+* print decimal number in right aligned format.
+* print hexadecimal number in fixed-width format.
+
+Asynchronous read can be implemented with `*_request_*` and
+`*_callback_*`.  For example, to read a 16-bit hexadecimal, call
+`readHex16()` with a callback function pointer and a context
+`_extra_`.  When human finishes input with _space_ or _enter_ key, the
+callback function will be called with input value, the context, and a
+input state.
+
+  libcli::Cli cli;
+  typedef libcli::Cli::State State;
+  void handleHex16(uint32_t value, uintptr_t extra, State state) {
+      if (state == State::CLI_SPACE || state == State::CLI_ENTER) {
+          cli.printHex16(value);
+      }
+  }
+  void begin() {
+      Serial.begin(9600);
+      cli.begin(Serial);
+      cli.print(F("16bit Hex? "));
+      cli.readHex16(handleHex16, extra);
+  }
+  void loop() {
+      cli.loop();
+      /* do other stuff */
+  }
+
+For the time being, v1.0 API has the following functions.
+
+  void readLetter(void (*)(char, uintptr_t) handler, uintptr_t extra);
+  void readString(void (*)(const char*, uintptr_t, State) handler, uintptr_t extra)
+  void readHex{8,16,32}(void (*)(uint32_t, uintptr_t, State) handler, uintptr_t extra)
+  void readDec{8,16,32}(void (*)(uint32_t, uintptr_t, State) handler, uintptr_t extra)
+  void printHex{8,16,20,24,32}(uint32_t value)
+  void printDec{8,16,32}(uint32_t value)
+
+There is on-going plan to refresh API to v1.1 though.
+
 NOTE: More information about this library can be found at
 https://github.com/tgtakaoka/libcli[GitHub]

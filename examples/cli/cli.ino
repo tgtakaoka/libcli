@@ -18,8 +18,8 @@
 
 #define Console Serial
 
-using libcli::Cli;
-static Cli cli;
+static libcli::Cli cli;
+typedef libcli::Cli::State State;
 
 static void handleCommand(char letter, uintptr_t extra);
 
@@ -30,16 +30,16 @@ static void prompt() {
 }
 
 /** handler for readDec32 */
-static void handleAdd(uint32_t value, uintptr_t extra, Cli::State state) {
+static void handleAdd(uint32_t value, uintptr_t extra, State state) {
     static uint32_t last_num;
 #define ADD_LEFT 0
 #define ADD_RIGHT 1
 
-    if (state == Cli::State::CLI_CANCEL) {
+    if (state == State::CLI_CANCEL) {
         prompt();
         return;
     }
-    if (state == Cli::State::CLI_DELETE) {
+    if (state == State::CLI_DELETE) {
         if (extra == ADD_LEFT)
             return;
         cli.backspace();
@@ -48,13 +48,13 @@ static void handleAdd(uint32_t value, uintptr_t extra, Cli::State state) {
     }
     if (extra == ADD_LEFT) {
         last_num = value;
-        if (state == Cli::State::CLI_SPACE) {
+        if (state == State::CLI_SPACE) {
             cli.readDec32(handleAdd, ADD_RIGHT);
             return;
         }
         value = 1;
     }
-    if (state == Cli::State::CLI_SPACE)
+    if (state == State::CLI_SPACE)
         cli.println();
     cli.print(F("add integers: "));
     cli.printDec32(last_num);
@@ -67,16 +67,16 @@ static void handleAdd(uint32_t value, uintptr_t extra, Cli::State state) {
 }
 
 /** handler for readHex16 and readDec8 */
-static void handleDump(uint32_t value, uintptr_t extra, Cli::State state) {
+static void handleDump(uint32_t value, uintptr_t extra, State state) {
     static uint32_t last_addr;
 #define DUMP_ADDRESS 0
 #define DUMP_LENGTH 1
 
-    if (state == Cli::State::CLI_CANCEL) {
+    if (state == State::CLI_CANCEL) {
         prompt();
         return;
     }
-    if (state == Cli::State::CLI_DELETE) {
+    if (state == State::CLI_DELETE) {
         if (extra == DUMP_ADDRESS)
             return;
         cli.backspace();
@@ -85,13 +85,13 @@ static void handleDump(uint32_t value, uintptr_t extra, Cli::State state) {
     }
     if (extra == DUMP_ADDRESS) {
         last_addr = value;
-        if (state == Cli::State::CLI_SPACE) {
+        if (state == State::CLI_SPACE) {
             cli.readDec8(handleDump, DUMP_LENGTH);
             return;
         }
         value = 16;
     }
-    if (state == Cli::State::CLI_SPACE)
+    if (state == State::CLI_SPACE)
         cli.println();
     cli.print(F("dump memory: "));
     cli.printHex16(last_addr);
@@ -102,18 +102,18 @@ static void handleDump(uint32_t value, uintptr_t extra, Cli::State state) {
 }
 
 /** handler for readHex16 and readHex8 */
-static void handleMemory(uint32_t value, uintptr_t extra, Cli::State state) {
+static void handleMemory(uint32_t value, uintptr_t extra, State state) {
     static uint32_t last_addr;
     static uint8_t mem_buffer[4];
 #define MEMORY_ADDRESS uint16_t(-1)
 #define MEMORY_INDEX(index) uint16_t(index)
 
-    if (state == Cli::State::CLI_CANCEL) {
+    if (state == State::CLI_CANCEL) {
         prompt();
         return;
     }
     uint16_t index = extra;
-    if (state == Cli::State::CLI_DELETE) {
+    if (state == State::CLI_DELETE) {
         if (extra == MEMORY_ADDRESS)
             return;
         cli.backspace();
@@ -132,7 +132,7 @@ static void handleMemory(uint32_t value, uintptr_t extra, Cli::State state) {
     }
 
     mem_buffer[index++] = value;
-    if (state == Cli::State::CLI_SPACE) {
+    if (state == State::CLI_SPACE) {
         if (index < sizeof(mem_buffer)) {
             cli.readHex8(handleMemory, MEMORY_INDEX(index));
             return;
@@ -150,9 +150,9 @@ static void handleMemory(uint32_t value, uintptr_t extra, Cli::State state) {
 }
 
 /** handler for readString */
-static void handleLoad(char *string, uintptr_t extra, Cli::State state) {
+static void handleLoad(char *string, uintptr_t extra, State state) {
     (void)extra;
-    if (state != Cli::State::CLI_CANCEL) {
+    if (state != State::CLI_CANCEL) {
         cli.print(F("load file: "));
         cli.println(string);
     }
