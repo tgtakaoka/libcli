@@ -1,4 +1,4 @@
-name: Compile Examples
+name: Arduino CI
 
 on:
   - push
