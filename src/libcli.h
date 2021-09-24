@@ -50,33 +50,33 @@ public:
     };
 
     /** Callback function of |readLetter|. */
-    typedef void (*LetterHandler)(char letter, uintptr_t extra);
-    /** Callback function of |readString|. */
-    typedef void (*StringHandler)(const char *string, uintptr_t extra, State state);
+    typedef void (*LetterCallback)(char letter, uintptr_t context);
+    /** Callback function of |readWord| and |readLine|. */
+    typedef void (*StringCallback)(const char *string, uintptr_t context, State state);
     /** Callback function of |readHex| and |readDec|. */
-    typedef void (*ValueHandler)(uint32_t value, uintptr_t extra, State state);
+    typedef void (*NumberCallback)(uint32_t number, uintptr_t context, State state);
 
     /** Read a single letter. */
-    void readLetter(LetterHandler handler, uintptr_t extra);
+    void readLetter(LetterCallback callback, uintptr_t context);
     /** Read a string delimitted by space. */
-    void readWord(StringHandler hadler, uintptr_t extra);
+    void readWord(StringCallback hadler, uintptr_t context);
     /** Read a string delimitted by space with |defval| as default. */
-    void readWord(StringHandler hadler, uintptr_t extra, const char *defval);
+    void readWord(StringCallback hadler, uintptr_t context, const char *defval);
     /** Read a string delimitted by newline. */
-    void readLine(StringHandler hadler, uintptr_t extra);
+    void readLine(StringCallback hadler, uintptr_t context);
     /** Read hexadecimal number less or equals to |limit|. */
-    void readHex(ValueHandler handler, uintptr_t extra, uint32_t limit = UINT32_MAX);
+    void readHex(NumberCallback callback, uintptr_t context, uint32_t limit = UINT32_MAX);
     /** Read hexadecimal number less or equals to |limit| with |defval| as default. */
-    void readHex(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval);
+    void readHex(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval);
     /** Read decimal number less or equal to |limit|. */
-    void readDec(ValueHandler handler, uintptr_t extra, uint32_t limit = UINT32_MAX);
+    void readDec(NumberCallback callback, uintptr_t context, uint32_t limit = UINT32_MAX);
     /** Read decimal number less or equal to |limit| with |defval| as default. */
-    void readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval);
+    void readDec(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval);
 
-    /** Print |value| in 0-prefixed hexadecimal format of |width| chars. */
-    size_t printHex(uint32_t value, uint8_t width = 0);
-    /** Print |value| in right-aligned decimal format of |width| chars. */
-    size_t printDec(uint32_t value, uint8_t width = 0);
+    /** Print |number| in 0-prefixed hexadecimal format of |width| chars. */
+    size_t printHex(uint32_t number, uint8_t width = 0);
+    /** Print |number| in right-aligned decimal format of |width| chars. */
+    size_t printDec(uint32_t number, uint8_t width = 0);
     /** Print backspace |n| times. */
     size_t backspace(int8_t n = 1);
 

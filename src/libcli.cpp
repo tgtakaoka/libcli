@@ -60,48 +60,48 @@ int Cli::peek() {
     return _impl.peek();
 }
 
-size_t Cli::printHex(uint32_t value, uint8_t width) {
-    return _impl.printHex(value, width);
+size_t Cli::printHex(uint32_t number, uint8_t width) {
+    return _impl.printHex(number, width);
 }
 
-size_t Cli::printDec(uint32_t value, uint8_t width) {
-    return _impl.printDec(value, width);
+size_t Cli::printDec(uint32_t number, uint8_t width) {
+    return _impl.printDec(number, width);
 }
 
 size_t Cli::backspace(int8_t n) {
     return _impl.backspace(n);
 }
 
-void Cli::readLetter(LetterHandler handler, uintptr_t extra) {
-    _impl.setHandler(handler, extra);
+void Cli::readLetter(LetterCallback callback, uintptr_t context) {
+    _impl.setCallback(callback, context);
 }
 
-void Cli::readWord(StringHandler handler, uintptr_t extra) {
-    _impl.setHandler(handler, extra, true);
+void Cli::readWord(StringCallback callback, uintptr_t context) {
+    _impl.setCallback(callback, context, true);
 }
 
-void Cli::readWord(StringHandler handler, uintptr_t extra, const char *defval) {
-    _impl.setHandler(handler, extra, true, defval);
+void Cli::readWord(StringCallback callback, uintptr_t context, const char *defval) {
+    _impl.setCallback(callback, context, true, defval);
 }
 
-void Cli::readLine(StringHandler handler, uintptr_t extra) {
-    _impl.setHandler(handler, extra);
+void Cli::readLine(StringCallback callback, uintptr_t context) {
+    _impl.setCallback(callback, context);
 }
 
-void Cli::readHex(ValueHandler handler, uintptr_t extra, uint32_t limit) {
-    _impl.setHandler(handler, extra, limit, 16);
+void Cli::readHex(NumberCallback callback, uintptr_t context, uint32_t limit) {
+    _impl.setCallback(callback, context, limit, 16);
 }
 
-void Cli::readHex(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
-    _impl.setHandler(handler, extra, limit, defval, 16);
+void Cli::readHex(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval) {
+    _impl.setCallback(callback, context, limit, defval, 16);
 }
 
-void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit) {
-    _impl.setHandler(handler, extra, limit, 10);
+void Cli::readDec(NumberCallback callback, uintptr_t context, uint32_t limit) {
+    _impl.setCallback(callback, context, limit, 10);
 }
 
-void Cli::readDec(ValueHandler handler, uintptr_t extra, uint32_t limit, uint32_t defval) {
-    _impl.setHandler(handler, extra, limit, defval, 10);
+void Cli::readDec(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval) {
+    _impl.setCallback(callback, context, limit, defval, 10);
 }
 
 void Cli::begin(Stream &console) {

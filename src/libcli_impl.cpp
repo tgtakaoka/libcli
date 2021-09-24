@@ -28,7 +28,7 @@ namespace libcli {
 namespace impl {
 
 /** Singleton */
-Impl Impl::_impl;
+Impl Impl::impl;
 
 static bool isBackspace(char c) {
     return c == '\b' || c == '\x7f';
@@ -42,29 +42,29 @@ static bool isNewline(char c) {
     return c == '\n' || c == '\r';
 }
 
-/** Returns number of digits of |value| in |base|. */
-static uint8_t getDigits(uint32_t value, uint8_t base) {
+/** Returns number of digits of |number| in |base|. */
+static uint8_t getDigits(uint32_t number, uint8_t base) {
     uint8_t n = 0;
     do {
         n++;
-        value /= base;
-    } while (value);
+        number /= base;
+    } while (number);
     return n;
 }
 
-size_t Impl::printHex(uint32_t value, uint8_t width) {
-    for (uint8_t n = getDigits(value, 16); n < width; n++) {
+size_t Impl::printHex(uint32_t number, uint8_t width) {
+    for (uint8_t n = getDigits(number, 16); n < width; n++) {
         console->print('0');
     }
-    console->print(value, HEX);
+    console->print(number, HEX);
     return width;
 }
 
-size_t Impl::printDec(uint32_t value, uint8_t width) {
-    for (uint8_t n = getDigits(value, 10); n < width; n++) {
+size_t Impl::printDec(uint32_t number, uint8_t width) {
+    for (uint8_t n = getDigits(number, 10); n < width; n++) {
         console->print(' ');
     }
-    console->print(value, DEC);
+    console->print(number, DEC);
     return width;
 }
 
@@ -75,17 +75,18 @@ size_t Impl::backspace(int8_t n) {
     return s;
 }
 
-void Impl::setHandler(Cli::LetterHandler handler, uintptr_t extra) {
-    this->handler.letter = handler;
-    setProcessor(&Impl::processLetter, extra);
+void Impl::setCallback(Cli::LetterCallback callback, uintptr_t context) {
+    this->callback.letter = callback;
+    setProcessor(&Impl::processLetter, context);
 }
 
 void Impl::processLetter(char c) {
-    handler.letter(c, extra);
+    callback.letter(c, context);
 }
 
-void Impl::setHandler(Cli::StringHandler handler, uintptr_t extra, bool word, const char *defval) {
-    this->handler.string = handler;
+void Impl::setCallback(
+        Cli::StringCallback callback, uintptr_t context, bool word, const char *defval) {
+    this->callback.string = callback;
     if (defval) {
         strncpy(str_buf, defval, sizeof(str_buf) - 1);
     } else {
@@ -93,30 +94,30 @@ void Impl::setHandler(Cli::StringHandler handler, uintptr_t extra, bool word, co
     }
     str_len = strlen(str_buf);
     str_word = word;
-    setProcessor(&Impl::processString, extra);
+    setProcessor(&Impl::processString, context);
 }
 
 void Impl::processString(char c) {
     if (isNewline(c)) {
-        if (str_len || !str_word) { // can't accept empty word
+        if (str_len || !str_word) {  // can't accept empty word
             console->println();
-            handler.string(str_buf, extra, State::CLI_NEWLINE);
+            callback.string(str_buf, context, State::CLI_NEWLINE);
         }
     } else if (isSpace(c) && str_word) {
-        if (str_len) {          // can't accept leading spaces in word
+        if (str_len) {  // can't accept leading spaces in word
             console->print(c);
-            handler.string(str_buf, extra, State::CLI_SPACE);
+            callback.string(str_buf, context, State::CLI_SPACE);
         }
     } else if (isBackspace(c)) {
         if (str_len) {
             str_buf[--str_len] = 0;
             backspace();
         } else if (str_word) {
-            handler.string(str_buf, extra, State::CLI_DELETE);
+            callback.string(str_buf, context, State::CLI_DELETE);
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));
-        handler.string(str_buf, extra, State::CLI_CANCEL);
+        callback.string(str_buf, context, State::CLI_CANCEL);
     } else if (str_len < sizeof(str_buf) - 1) {
         str_buf[str_len++] = c;
         str_buf[str_len] = 0;
@@ -124,68 +125,69 @@ void Impl::processString(char c) {
     }
 }
 
-void Impl::setHandler(Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint8_t base) {
-    this->handler.value = handler;
-    val_width = getDigits(val_limit = limit, val_base = base);
-    val_value = 0;
-    val_len = 0;
-    setProcessor(&Impl::processValue, extra);
+void Impl::setCallback(
+        Cli::NumberCallback callback, uint32_t context, uint32_t limit, uint8_t base) {
+    this->callback.number = callback;
+    num_width = getDigits(num_limit = limit, num_base = base);
+    num_value = 0;
+    num_len = 0;
+    setProcessor(&Impl::processNumber, context);
 }
 
-void Impl::setHandler(
-        Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint32_t defval, uint8_t base) {
-    backspace(val_width);
-    setHandler(handler, extra, limit, base);
-    val_value = defval;
-    val_len = val_width;
+void Impl::setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
+        uint32_t defval, uint8_t base) {
+    backspace(num_width);
+    setCallback(callback, context, limit, base);
+    num_value = defval;
+    num_len = num_width;
     if (base == 10) {
-        printDec(val_value, val_len);
+        printDec(num_value, num_len);
     } else {
-        printHex(val_value, val_len);
+        printHex(num_value, num_len);
     }
 }
 
 bool Impl::checkLimit(char c, uint8_t &n) const {
     c = toUpperCase(c);
-    if (val_base == 10 && isDigit(c)) {
+    if (num_base == 10 && isDigit(c)) {
         n = c - '0';
-        const uint32_t limit = val_limit / 10;
-        return val_value < limit || (val_value == limit && n <= (val_limit % 10));
+        const uint32_t limit = num_limit / 10;
+        return num_value < limit || (num_value == limit && n <= (num_limit % 10));
     }
-    if (val_base == 16 && isHexadecimalDigit(c)) {
+    if (num_base == 16 && isHexadecimalDigit(c)) {
         n = c - 'A' + 10;
-        const uint32_t limit = val_limit / 16;
-        return val_value < limit || (val_value == limit && n <= (val_limit % 16));
+        const uint32_t limit = num_limit / 16;
+        return num_value < limit || (num_value == limit && n <= (num_limit % 16));
     }
     return false;
 }
 
-void Impl::processValue(char c) {
+void Impl::processNumber(char c) {
     uint8_t n;
     if (checkLimit(c, n)) {
-        val_value *= val_base;
-        val_value += n;
-        val_len++;
+        num_value *= num_base;
+        num_value += n;
+        num_len++;
         console->print(c);
         return;
     }
 
     State state;
     if (isBackspace(c)) {
-        if (val_len) {
-            val_value /= val_base;
-            val_len--;
+        if (num_len) {
+            num_value /= num_base;
+            num_len--;
             backspace();
             return;
         }
         state = State::CLI_DELETE;
-    } else if (isSpace(c) && val_len) {
-        backspace(val_len);
-        val_len = val_width;
-        if (val_base == 10) {
-            printDec(val_value, val_len);
+    } else if (isSpace(c) && num_len) {
+        backspace(num_len);
+        num_len = num_width;
+        if (num_base == 10) {
+            printDec(num_value, num_len);
         } else {
-            printHex(val_value, val_len);
+            printHex(num_value, num_len);
         }
         if (isNewline(c)) {
             console->println();
@@ -200,7 +202,7 @@ void Impl::processValue(char c) {
     } else {
         return;
     }
-    handler.value(val_value, extra, state);
+    callback.number(num_value, context, state);
 }
 
 }  // namespace impl

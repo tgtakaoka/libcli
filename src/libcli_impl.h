@@ -27,78 +27,78 @@ namespace impl {
 
 /** Implementation detail of libcli. */
 struct Impl final {
-    static constexpr Impl &instance() { return _impl; }
+    /** Get the singleton instance. */
+    static constexpr Impl &instance() { return impl; }
 
     void begin(Stream &stream) {
         console = &stream;
         setProcessor(&Impl::processNop, 0);
     }
 
-    /** Delegate methods of Print. */
-    size_t write(uint8_t val) { return console->write(val); }
-    size_t write(const uint8_t *buf, size_t size) { return console->write(buf, size); }
-    int availableForWrite() { return console->availableForWrite(); }
-
-    /** Delegate methods of Stream. */
-    int available() { return console->available(); }
-    int read() { return console->read(); }
-    int peek() { return console->peek(); }
-
-    void setHandler(Cli::LetterHandler handler, uintptr_t extra);
-    void setHandler(Cli::StringHandler handler, uintptr_t extra, bool word = false,
+    void setCallback(Cli::LetterCallback callback, uintptr_t context);
+    void setCallback(Cli::StringCallback callback, uintptr_t context, bool word = false,
             const char *defval = nullptr);
-    void setHandler(Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint8_t base);
-    void setHandler(Cli::ValueHandler handler, uint32_t extra, uint32_t limit, uint32_t defval,
-            uint8_t base);
+    void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit, uint8_t base);
+    void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
+            uint32_t defval, uint8_t base);
 
     void process(char c) { (this->*processor)(c); }
 
     size_t backspace(int8_t n = 1);
-    size_t printHex(uint32_t value, uint8_t width = 0);
-    size_t printDec(uint32_t value, uint8_t width = 0);
-
-    /** The singleton of Impl. */
-    static Impl _impl;
+    size_t printHex(uint32_t number, uint8_t width = 0);
+    size_t printDec(uint32_t number, uint8_t width = 0);
 
     /** No copy constructor. */
     Impl(Impl const &) = delete;
     /** No assignment operator. */
     void operator=(Impl const &) = delete;
 
+    /** Delegate methods for Print. */
+    size_t write(uint8_t val) { return console->write(val); }
+    size_t write(const uint8_t *buf, size_t size) { return console->write(buf, size); }
+    int availableForWrite() { return console->availableForWrite(); }
+
+    /** Delegate methods for Stream. */
+    int available() { return console->available(); }
+    int read() { return console->read(); }
+    int peek() { return console->peek(); }
+
 private:
+    /** The singleton of Impl. */
+    static Impl impl;
+
     Stream *console;
 
-    void setProcessor(void (Impl::*proc)(char), uintptr_t ext) {
-        processor = proc;
-        extra = ext;
+    void setProcessor(void (Impl::*processor)(char), uintptr_t context) {
+        this->processor = processor;
+        this->context = context;
     }
 
     void (Impl::*processor)(char c);
     union {
-        Cli::LetterHandler letter;
-        Cli::StringHandler string;
-        Cli::ValueHandler value;
-    } handler;
-    uintptr_t extra;
+        Cli::LetterCallback letter;
+        Cli::StringCallback string;
+        Cli::NumberCallback number;
+    } callback;
+    uintptr_t context;
 
     uint8_t str_len;
     bool str_word;
     char str_buf[80 + 1];
 
-    uint32_t val_limit;
-    uint32_t val_value;
-    uint8_t val_base;
-    uint8_t val_len;
-    uint8_t val_width;
+    uint32_t num_value;
+    uint32_t num_limit;
+    uint8_t num_base;
+    uint8_t num_len;
+    uint8_t num_width;
 
-private:
     /** Hidden efault constructor. */
     Impl() {}
 
     void processNop(char c) { (void)c; }
     void processLetter(char c);
     void processString(char c);
-    void processValue(char c);
+    void processNumber(char c);
     bool checkLimit(char c, uint8_t &n) const;
 };
 
