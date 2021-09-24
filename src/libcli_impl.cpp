@@ -20,6 +20,7 @@
 #include "libcli.h"
 
 using namespace libcli;
+typedef Cli::State State;
 
 namespace libcli {
 
@@ -76,7 +77,7 @@ size_t Impl::backspace(int8_t n) {
 void Impl::processString(char c) {
     if (isNewline(c)) {
         console->println();
-        handler.string(str_buf, extra, Cli::State::CLI_NEWLINE);
+        handler.string(str_buf, extra, State::CLI_NEWLINE);
     } else if (isBackspace(c)) {
         if (str_len) {
             str_buf[--str_len] = 0;
@@ -84,7 +85,7 @@ void Impl::processString(char c) {
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));
-        handler.string(str_buf, extra, Cli::State::CLI_CANCEL);
+        handler.string(str_buf, extra, State::CLI_CANCEL);
     } else if (str_len < sizeof(str_buf) - 1) {
         str_buf[str_len++] = c;
         str_buf[str_len] = 0;
@@ -138,7 +139,7 @@ void Impl::processValue(char c) {
         return;
     }
 
-    Cli::State state;
+    State state;
     if (isBackspace(c)) {
         if (val_len) {
             val_value /= val_base;
@@ -146,7 +147,7 @@ void Impl::processValue(char c) {
             backspace();
             return;
         }
-        state = Cli::State::CLI_DELETE;
+        state = State::CLI_DELETE;
     } else if (isSpace(c) && val_len) {
         backspace(val_len);
         val_len = val_width;
@@ -157,14 +158,14 @@ void Impl::processValue(char c) {
         }
         if (isNewline(c)) {
             console->println();
-            state = Cli::State::CLI_NEWLINE;
+            state = State::CLI_NEWLINE;
         } else {
             console->print(c);
-            state = Cli::State::CLI_SPACE;
+            state = State::CLI_SPACE;
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));
-        state = Cli::State::CLI_CANCEL;
+        state = State::CLI_CANCEL;
     } else {
         return;
     }
