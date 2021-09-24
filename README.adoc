@@ -12,50 +12,52 @@ interaction from serial console while controlling hardware etc.  Of
 course we can use `Serial.available()` in `loop()` and carefully use
 `Serial.read()` not to block program flow.
 
-So `libcli` library comes for help. This library offers a command line
-instance which can
+So `libcli` library comes for help. This library offers a singleton
+instance as a command line interface which can
 
-* read a letter, text string, decimal and hexadecimal input
-  from serial console asynchronously.
+* read a letter, a word string, a line of string, decimal and
+  hexadecimal numer from serial console asynchronously.
 * act as `Stream` and do any form of `print()` and `println()`.
-* print decimal number in right aligned format.
-* print hexadecimal number in fixed-width format.
+* print decimal number in specified width as right aligned format,
+  such as `"%6d"` in `printf()`.
+* print hexadecimal number in specified fixed-width format, such as
+  `"%08X"` in `printf()`.
 
-Asynchronous read can be implemented with `*_request_*` and
-`*_callback_*`.  For example, to read a 16-bit hexadecimal, call
-`readHex16()` with a callback function pointer and a context
-`_extra_`.  When human finishes input with _space_ or _enter_ key, the
-callback function will be called with input value, the context, and a
-input state.
+Asynchronous read can be implemented with *_request_* and
+*_callback_*.  For example, to read a 16-bit hexadecimal, call
+`readHex()` *_request_* with a `_callback_` function pointer,
+`UINT16_MAX` as a `_limit_` of input, and a `_context_`.  When human
+finishes input with space or enter key, the `_callback_` function will
+be called with input `_value_`, the `_context_` passed in the
+*_request_*, and a input `_state_`.
 
-  libcli::Cli cli;
+  libcli::Cli &cli = libcli::Cli::instance();
   typedef libcli::Cli::State State;
-  void handleHex16(uint32_t value, uintptr_t extra, State state) {
+  void handleHex16(uint32_t value, uintptr_t context, State state) {
       if (state == State::CLI_SPACE || state == State::CLI_ENTER) {
-          cli.printHex16(value);
+          cli.printHex(value, sizeof(uint16) * 2);
       }
   }
   void begin() {
       Serial.begin(9600);
       cli.begin(Serial);
       cli.print(F("16bit Hex? "));
-      cli.readHex16(handleHex16, extra);
+      cli.readHex(handleHex16, context, UINT16_MAX);
   }
   void loop() {
       cli.loop();
       /* do other stuff */
   }
 
-For the time being, v1.0 API has the following functions.
+The version 1.1 API has the following functions.
 
-  void readLetter(void (*)(char, uintptr_t) handler, uintptr_t extra);
-  void readString(void (*)(const char*, uintptr_t, State) handler, uintptr_t extra)
-  void readHex{8,16,32}(void (*)(uint32_t, uintptr_t, State) handler, uintptr_t extra)
-  void readDec{8,16,32}(void (*)(uint32_t, uintptr_t, State) handler, uintptr_t extra)
-  void printHex{8,16,20,24,32}(uint32_t value)
-  void printDec{8,16,32}(uint32_t value)
-
-There is on-going plan to refresh API to v1.1 though.
+  void readLetter(void (*)(char, uintptr_t) callback, uintptr_t context);
+  void readWord(void (*)(const char*, uintptr_t, State) callback, uintptr_t context);
+  void readLine(void (*)(const char*, uintptr_t, State) callback, uintptr_t context);
+  void readHex(void (*)(uint32_t, uintptr_t, State) callback, uintptr_t context, uint32_t limit = UINT32_MAX);
+  void readDec(void (*)(uint32_t, uintptr_t, State) callback, uintptr_t context, uint23_t limit = UINt32_MAX)
+  void printHex(uint32_t number, uint8_t width = 0)
+  void printDec(uint32_t number, uint8_t width = 0)
 
 NOTE: More information about this library can be found at
 https://github.com/tgtakaoka/libcli[GitHub]
