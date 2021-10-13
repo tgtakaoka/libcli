@@ -136,8 +136,8 @@ void Impl::setCallback(
 
 void Impl::setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
         uint32_t defval, uint8_t base) {
-    backspace(num_width);
     setCallback(callback, context, limit, base);
+    backspace(num_width);
     num_value = defval;
     num_len = num_width;
     if (base == 10) {
@@ -155,7 +155,7 @@ bool Impl::checkLimit(char c, uint8_t &n) const {
         return num_value < limit || (num_value == limit && n <= (num_limit % 10));
     }
     if (num_base == 16 && isHexadecimalDigit(c)) {
-        n = c - 'A' + 10;
+        n = isDigit(c) ? c - '0' : c - 'A' + 10;
         const uint32_t limit = num_limit / 16;
         return num_value < limit || (num_value == limit && n <= (num_limit % 16));
     }
