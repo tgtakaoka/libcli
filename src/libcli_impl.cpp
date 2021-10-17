@@ -148,6 +148,8 @@ void Impl::setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t 
 }
 
 bool Impl::checkLimit(char c, uint8_t &n) const {
+    if (num_len >= num_width)
+        return false;
     c = toUpperCase(c);
     if (num_base == 10 && isDigit(c)) {
         n = c - '0';
