@@ -36,8 +36,8 @@ struct Impl final {
     }
 
     void setCallback(Cli::LetterCallback callback, uintptr_t context);
-    void setCallback(Cli::StringCallback callback, uintptr_t context, bool word = false,
-            const char *defval = nullptr);
+    void setCallback(Cli::StringCallback callback, uintptr_t context, char *buffer, size_t size,
+            bool hasDefval, bool word = false);
     void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit, uint8_t base);
     void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
             uint32_t defval, uint8_t base);
@@ -82,9 +82,10 @@ private:
     } callback;
     uintptr_t context;
 
-    uint8_t str_len;
+    size_t str_limit;
+    size_t str_len;
     bool str_word;
-    char str_buf[80 + 1];
+    char *str_buffer;
 
     uint32_t num_value;
     uint32_t num_limit;

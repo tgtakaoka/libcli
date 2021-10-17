@@ -49,11 +49,11 @@ be called with input `_value_`, the `_context_` passed in the
       /* do other stuff */
   }
 
-The version 1.1 API has the following functions.
+The version 1.2 API has the following functions.
 
   void readLetter(void (*)(char, uintptr_t) callback, uintptr_t context);
-  void readWord(void (*)(const char*, uintptr_t, State) callback, uintptr_t context);
-  void readLine(void (*)(const char*, uintptr_t, State) callback, uintptr_t context);
+  void readWord(void (*)(const char*, uintptr_t, State) callback, uintptr_t context, char *buffer, size_t size, bool hasDefval = false);
+  void readLine(void (*)(const char*, uintptr_t, State) callback, uintptr_t context, char *buffer, size_t size, bool hasDefval = false);
   void readHex(void (*)(uint32_t, uintptr_t, State) callback, uintptr_t context, uint32_t limit = UINT32_MAX);
   void readDec(void (*)(uint32_t, uintptr_t, State) callback, uintptr_t context, uint23_t limit = UINt32_MAX)
   void printHex(uint32_t number, uint8_t width = 0)

@@ -18,6 +18,7 @@
 #define __LIBCLI_H__
 
 #include <Arduino.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define LIBCLI_VERSION_MAJOR 1
@@ -52,32 +53,61 @@ public:
     /** Callback function of |readLetter|. */
     typedef void (*LetterCallback)(char letter, uintptr_t context);
     /** Callback function of |readWord| and |readLine|. */
-    typedef void (*StringCallback)(const char *string, uintptr_t context, State state);
+    typedef void (*StringCallback)(char *string, uintptr_t context, State state);
     /** Callback function of |readHex| and |readDec|. */
     typedef void (*NumberCallback)(uint32_t number, uintptr_t context, State state);
 
-    /** Read a single letter. */
+    /**
+     * Read a single letter.
+     */
     void readLetter(LetterCallback callback, uintptr_t context);
-    /** Read a string delimitted by space. */
-    void readWord(StringCallback hadler, uintptr_t context);
-    /** Read a string delimitted by space with |defval| as default. */
-    void readWord(StringCallback hadler, uintptr_t context, const char *defval);
-    /** Read a string delimitted by newline. */
-    void readLine(StringCallback hadler, uintptr_t context);
-    /** Read hexadecimal number less or equals to |limit|. */
+
+    /**
+     * Read a string delimitted by space into |buffer| which has |size| bytes. If |hasDefval| is
+     * true, |buffer| contains a default value.
+     */
+    void readWord(StringCallback callback, uintptr_t context, char *buffer, size_t size,
+            bool hasDefval = false);
+
+    /**
+     * Read a string delimitted by newline into |buffer| which has |size| bytes. If |hasDefval| is
+     * true, |buffer| contains a default value.
+     */
+    void readLine(StringCallback callback, uintptr_t context, char *buffer, size_t size,
+            bool hasDefval = false);
+    /**
+     * Read hexadecimal number less or equals to |limit|.
+     */
     void readHex(NumberCallback callback, uintptr_t context, uint32_t limit = UINT32_MAX);
-    /** Read hexadecimal number less or equals to |limit| with |defval| as default. */
+
+    /**
+     * Read hexadecimal number less or equals to |limit| with |defval| as default.
+     */
     void readHex(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval);
-    /** Read decimal number less or equal to |limit|. */
+
+    /**
+     * Read decimal number less or equal to |limit|.
+     */
     void readDec(NumberCallback callback, uintptr_t context, uint32_t limit = UINT32_MAX);
-    /** Read decimal number less or equal to |limit| with |defval| as default. */
+
+    /**
+     * Read decimal number less or equal to |limit| with |defval| as default.
+     */
     void readDec(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval);
 
-    /** Print |number| in 0-prefixed hexadecimal format of |width| chars. */
+    /**
+     * Print |number| in 0-prefixed hexadecimal format of |width| chars.
+     */
     size_t printHex(uint32_t number, uint8_t width = 0);
-    /** Print |number| in right-aligned decimal format of |width| chars. */
+
+    /**
+     * Print |number| in right-aligned decimal format of |width| chars.
+     */
     size_t printDec(uint32_t number, uint8_t width = 0);
-    /** Print backspace |n| times. */
+
+    /**
+     * Print backspace |n| times.
+     */
     size_t backspace(int8_t n = 1);
 
     /** Virtual methods of Print. */

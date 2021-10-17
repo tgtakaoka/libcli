@@ -84,15 +84,16 @@ void Impl::processLetter(char c) {
     callback.letter(c, context);
 }
 
-void Impl::setCallback(
-        Cli::StringCallback callback, uintptr_t context, bool word, const char *defval) {
+void Impl::setCallback(Cli::StringCallback callback, uintptr_t context, char *buffer, size_t size,
+        bool hasDefval, bool word) {
     this->callback.string = callback;
-    if (defval) {
-        strncpy(str_buf, defval, sizeof(str_buf) - 1);
+    str_buffer = buffer;
+    str_limit = size - 1;
+    if (hasDefval) {
+        str_len = strlen(str_buffer);
     } else {
-        str_buf[0] = 0;
+        str_buffer[str_len = 0] = 0;
     }
-    str_len = strlen(str_buf);
     str_word = word;
     setProcessor(&Impl::processString, context);
 }
@@ -101,26 +102,26 @@ void Impl::processString(char c) {
     if (isNewline(c)) {
         if (str_len || !str_word) {  // can't accept empty word
             console->println();
-            callback.string(str_buf, context, State::CLI_NEWLINE);
+            callback.string(str_buffer, context, State::CLI_NEWLINE);
         }
     } else if (isSpace(c) && str_word) {
         if (str_len) {  // can't accept leading spaces in word
             console->print(c);
-            callback.string(str_buf, context, State::CLI_SPACE);
+            callback.string(str_buffer, context, State::CLI_SPACE);
         }
     } else if (isBackspace(c)) {
         if (str_len) {
-            str_buf[--str_len] = 0;
+            str_buffer[--str_len] = 0;
             backspace();
         } else if (str_word) {
-            callback.string(str_buf, context, State::CLI_DELETE);
+            callback.string(str_buffer, context, State::CLI_DELETE);
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));
-        callback.string(str_buf, context, State::CLI_CANCEL);
-    } else if (str_len < sizeof(str_buf) - 1) {
-        str_buf[str_len++] = c;
-        str_buf[str_len] = 0;
+        callback.string(str_buffer, context, State::CLI_CANCEL);
+    } else if (str_len < str_limit) {
+        str_buffer[str_len++] = c;
+        str_buffer[str_len] = 0;
         console->print(c);
     }
 }

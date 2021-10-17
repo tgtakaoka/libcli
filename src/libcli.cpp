@@ -76,16 +76,14 @@ void Cli::readLetter(LetterCallback callback, uintptr_t context) {
     _impl.setCallback(callback, context);
 }
 
-void Cli::readWord(StringCallback callback, uintptr_t context) {
-    _impl.setCallback(callback, context, true);
+void Cli::readWord(
+        StringCallback callback, uintptr_t context, char *buffer, size_t size, bool hasDefval) {
+    _impl.setCallback(callback, context, buffer, size, hasDefval, true);
 }
 
-void Cli::readWord(StringCallback callback, uintptr_t context, const char *defval) {
-    _impl.setCallback(callback, context, true, defval);
-}
-
-void Cli::readLine(StringCallback callback, uintptr_t context) {
-    _impl.setCallback(callback, context);
+void Cli::readLine(
+        StringCallback callback, uintptr_t context, char *buffer, size_t size, bool hasDefval) {
+    _impl.setCallback(callback, context, buffer, size, hasDefval);
 }
 
 void Cli::readHex(NumberCallback callback, uintptr_t context, uint32_t limit) {

@@ -196,8 +196,10 @@ static void handleMemory(uint32_t value, uintptr_t context, State state) {
     prompt();
 }
 
+static char str_buffer[40];
+
 /** callback for readLine */
-static void handleLoad(const char *line, uintptr_t context, State state) {
+static void handleLoad(char *line, uintptr_t context, State state) {
     (void)context;
     if (state != State::CLI_CANCEL) {
         Cli.print(F("load file: '"));
@@ -210,7 +212,7 @@ static void handleLoad(const char *line, uintptr_t context, State state) {
 /** callback for readWord */
 static constexpr size_t WORD_LEN = 10;
 
-static void handleWord(const char *word, uintptr_t context, State state) {
+static void handleWord(char *word, uintptr_t context, State state) {
     static char words[4][WORD_LEN + 1];
     static constexpr size_t WORD_MAX = sizeof(words) / sizeof(words[0]);
 
@@ -223,7 +225,8 @@ static void handleWord(const char *word, uintptr_t context, State state) {
         if (index != 0) {
             Cli.backspace();
             index--;
-            Cli.readWord(handleWord, index, words[index]);
+            strcpy(str_buffer, words[index]);
+            Cli.readWord(handleWord, index, str_buffer, sizeof(str_buffer), true);
         }
         return;
     }
@@ -231,7 +234,7 @@ static void handleWord(const char *word, uintptr_t context, State state) {
     strncpy(words[index++], word, WORD_LEN);
     if (state == State::CLI_SPACE) {
         if (index < WORD_MAX) {
-            Cli.readWord(handleWord, index);
+            Cli.readWord(handleWord, index, str_buffer, sizeof(str_buffer));
             return;
         }
         Cli.println();
@@ -264,12 +267,12 @@ static void handleCommand(char letter, uintptr_t context) {
     }
     if (letter == 'l') {
         Cli.print(F("load "));
-        Cli.readLine(handleLoad, 0);
+        Cli.readLine(handleLoad, 0, str_buffer, sizeof(str_buffer));
         return;
     }
     if (letter == 'w') {
         Cli.print(F("word "));
-        Cli.readWord(handleWord, 0);
+        Cli.readWord(handleWord, 0, str_buffer, sizeof(str_buffer));
         return;
     }
     if (letter == 'd') {
