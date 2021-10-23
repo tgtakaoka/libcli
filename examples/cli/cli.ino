@@ -62,8 +62,7 @@ static void handleAddDec(uint32_t value, uintptr_t context, State state) {
     Cli.print(F(" + "));
     Cli.printDec(value);
     Cli.print(F(" = "));
-    Cli.printDec(last_num + value);
-    Cli.println();
+    Cli.printlnDec(last_num + value);
     prompt();
 }
 
@@ -100,8 +99,7 @@ static void handleAddHex(uint32_t value, uintptr_t context, State state) {
     Cli.print(F(" + "));
     Cli.printHex(value, HEX_WIDTH);
     Cli.print(F(" = "));
-    Cli.printHex(last_num + value, HEX_WIDTH);
-    Cli.println();
+    Cli.printlnHex(last_num + value, HEX_WIDTH);
     prompt();
 }
 
@@ -138,8 +136,7 @@ static void handleDump(uint32_t value, uintptr_t context, State state) {
     Cli.print(F("dump memory: "));
     Cli.printHex(last_addr, DUMP_ADDR_WIDTH);
     Cli.print(' ');
-    Cli.printDec(value);
-    Cli.println();
+    Cli.printlnDec(value);
     prompt();
 }
 

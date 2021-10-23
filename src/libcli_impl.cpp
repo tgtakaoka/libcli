@@ -52,20 +52,26 @@ static uint8_t getDigits(uint32_t number, uint8_t base) {
     return n;
 }
 
-size_t Impl::printHex(uint32_t number, uint8_t width) {
+size_t Impl::printHex(uint32_t number, uint8_t width, bool newline) {
+    size_t size = 0;
     for (uint8_t n = getDigits(number, 16); n < width; n++) {
-        console->print('0');
+        size += console->print('0');
     }
-    console->print(number, HEX);
-    return width;
+    size += console->print(number, HEX);
+    if (newline)
+        size += console->println();
+    return size;
 }
 
-size_t Impl::printDec(uint32_t number, uint8_t width) {
+size_t Impl::printDec(uint32_t number, uint8_t width, bool newline) {
+    size_t size = 0;
     for (uint8_t n = getDigits(number, 10); n < width; n++) {
-        console->print(' ');
+        size += console->print(' ');
     }
-    console->print(number, DEC);
-    return width;
+    size += console->print(number, DEC);
+    if (newline)
+        size += console->println();
+    return size;
 }
 
 size_t Impl::backspace(int8_t n) {

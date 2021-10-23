@@ -45,8 +45,8 @@ struct Impl final {
     void process(char c) { (this->*processor)(c); }
 
     size_t backspace(int8_t n = 1);
-    size_t printHex(uint32_t number, uint8_t width = 0);
-    size_t printDec(uint32_t number, uint8_t width = 0);
+    size_t printHex(uint32_t number, uint8_t width = 0, bool newline = false);
+    size_t printDec(uint32_t number, uint8_t width = 0, bool newline = false);
 
     /** No copy constructor. */
     Impl(Impl const &) = delete;

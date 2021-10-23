@@ -106,6 +106,16 @@ public:
     size_t printDec(uint32_t number, uint8_t width = 0);
 
     /**
+     * Print |number| in 0-prefixed hexadecimal format of |width| chars and newline.
+     */
+    size_t printlnHex(uint32_t number, uint8_t width = 0);
+
+    /**
+     * Print |number| in right-aligned decimal format of |width| chars and newline.
+     */
+    size_t printlnDec(uint32_t number, uint8_t width = 0);
+
+    /**
      * Print backspace |n| times.
      */
     size_t backspace(int8_t n = 1);

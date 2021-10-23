@@ -72,6 +72,14 @@ size_t Cli::printDec(uint32_t number, uint8_t width) {
     return _impl.printDec(number, width);
 }
 
+size_t Cli::printlnHex(uint32_t number, uint8_t width) {
+    return _impl.printHex(number, width, true);
+}
+
+size_t Cli::printlnDec(uint32_t number, uint8_t width) {
+    return _impl.printDec(number, width, true);
+}
+
 size_t Cli::backspace(int8_t n) {
     return _impl.backspace(n);
 }
