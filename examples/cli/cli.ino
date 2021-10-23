@@ -55,8 +55,8 @@ static void handleAddDec(uint32_t value, uintptr_t context, State state) {
         }
         value = 1;
     }
-    if (state == State::CLI_SPACE)
-        Cli.println();
+
+    Cli.println();
     Cli.print(F("add integers: "));
     Cli.printDec(last_num);
     Cli.print(F(" + "));
@@ -92,8 +92,8 @@ static void handleAddHex(uint32_t value, uintptr_t context, State state) {
         }
         value = 1;
     }
-    if (state == State::CLI_SPACE)
-        Cli.println();
+
+    Cli.println();
     Cli.print(F("add hexadecimal: "));
     Cli.printHex(last_num, HEX_WIDTH);
     Cli.print(F(" + "));
@@ -131,8 +131,8 @@ static void handleDump(uint32_t value, uintptr_t context, State state) {
         }
         value = 16;
     }
-    if (state == State::CLI_SPACE)
-        Cli.println();
+
+    Cli.println();
     Cli.print(F("dump memory: "));
     Cli.printHex(last_addr, DUMP_ADDR_WIDTH);
     Cli.print(' ');
@@ -181,8 +181,9 @@ static void handleMemory(uint32_t value, uintptr_t context, State state) {
             Cli.readHex(handleMemory, MEMORY_INDEX(index), UINT8_MAX);
             return;
         }
-        Cli.println();
     }
+
+    Cli.println();
     Cli.print(F("write memory: "));
     Cli.printHex(last_addr, MEMORY_ADDR_WIDTH);
     for (uint8_t i = 0; i < index; i++) {
@@ -199,6 +200,7 @@ static char str_buffer[40];
 static void handleLoad(char *line, uintptr_t context, State state) {
     (void)context;
     if (state != State::CLI_CANCEL) {
+        Cli.println();
         Cli.print(F("load file: '"));
         Cli.print(line);
         Cli.println('\'');
@@ -207,10 +209,10 @@ static void handleLoad(char *line, uintptr_t context, State state) {
 }
 
 /** callback for readWord */
-static constexpr size_t WORD_LEN = 10;
+static constexpr size_t WORD_LEN = 10 + 1;
 
 static void handleWord(char *word, uintptr_t context, State state) {
-    static char words[4][WORD_LEN + 1];
+    static char words[4][WORD_LEN];
     static constexpr size_t WORD_MAX = sizeof(words) / sizeof(words[0]);
 
     if (state == State::CLI_CANCEL) {
@@ -223,20 +225,25 @@ static void handleWord(char *word, uintptr_t context, State state) {
             Cli.backspace();
             index--;
             strcpy(str_buffer, words[index]);
-            Cli.readWord(handleWord, index, str_buffer, sizeof(str_buffer), true);
+            Cli.readWord(handleWord, index, str_buffer, WORD_LEN, true);
         }
         return;
     }
 
-    strncpy(words[index++], word, WORD_LEN);
+    strncpy(words[index], word, WORD_LEN);
+    words[index][0] = toUpperCase(words[index][0]);
+    Cli.backspace(strlen(words[index]) + 1);
+    Cli.print(words[index]);
+    index++;
     if (state == State::CLI_SPACE) {
         if (index < WORD_MAX) {
-            Cli.readWord(handleWord, index, str_buffer, sizeof(str_buffer));
+            Cli.print(' ');
+            Cli.readWord(handleWord, index, str_buffer, WORD_LEN);
             return;
         }
-        Cli.println();
     }
 
+    Cli.println();
     for (size_t i = 0; i < index; i++) {
         Cli.print(F("  word "));
         Cli.printDec(i + 1);
@@ -269,7 +276,7 @@ static void handleCommand(char letter, uintptr_t context) {
     }
     if (letter == 'w') {
         Cli.print(F("word "));
-        Cli.readWord(handleWord, 0, str_buffer, sizeof(str_buffer));
+        Cli.readWord(handleWord, 0, str_buffer, WORD_LEN);
         return;
     }
     if (letter == 'd') {

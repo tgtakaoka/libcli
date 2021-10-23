@@ -106,10 +106,8 @@ void Impl::setCallback(Cli::StringCallback callback, uintptr_t context, char *bu
 
 void Impl::processString(char c) {
     if (isNewline(c)) {
-        if (str_len || !str_word) {  // can't accept empty word
-            console->println();
-            callback.string(str_buffer, context, State::CLI_NEWLINE);
-        }
+        console->print(' ');
+        callback.string(str_buffer, context, State::CLI_NEWLINE);
     } else if (isSpace(c) && str_word) {
         if (str_len) {  // can't accept leading spaces in word
             console->print(c);
@@ -199,7 +197,7 @@ void Impl::processNumber(char c) {
             printHex(num_value, num_len);
         }
         if (isNewline(c)) {
-            console->println();
+            console->print(' ');
             state = State::CLI_NEWLINE;
         } else {
             console->print(c);
