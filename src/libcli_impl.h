@@ -62,9 +62,7 @@ struct Impl final {
     int available() { return console->available(); }
     int read() { return console->read(); }
     int peek() { return console->peek(); }
-#if defined (ESP_PLATFORM)
     void flush() { return console->flush(); }
-#endif
 
 private:
     /** The singleton of Impl. */

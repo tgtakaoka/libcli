@@ -119,9 +119,7 @@ public:
     int available() override;
     int read() override;
     int peek() override;
-#if defined(ESP_PLATFORM)
     void flush() override;
-#endif
 
     /** No copy constructor. */
     Cli(Cli const &) = delete;

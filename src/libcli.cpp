@@ -44,11 +44,9 @@ int Cli::availableForWrite() {
     return _impl.availableForWrite();
 }
 
-#if defined(ESP_PLATFORM)
 void Cli::flush() {
-    return _impl.flush();
+    _impl.flush();
 }
-#endif
 
 /**
  * Virtual methods of Stream class.
