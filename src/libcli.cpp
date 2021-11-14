@@ -64,20 +64,36 @@ int Cli::peek() {
     return _impl.peek();
 }
 
-size_t Cli::printHex(uint32_t number, uint8_t width) {
-    return _impl.printHex(number, width);
+size_t Cli::printHex(uint32_t number, int8_t width) {
+    return _impl.printHex(number, width, false);
 }
 
-size_t Cli::printDec(uint32_t number, uint8_t width) {
-    return _impl.printDec(number, width);
+size_t Cli::printDec(uint32_t number, int8_t width) {
+    return _impl.printDec(number, width, false);
 }
 
-size_t Cli::printlnHex(uint32_t number, uint8_t width) {
+size_t Cli::printStr(const __FlashStringHelper *text, int8_t width) {
+    return _impl.printStr(text, width, false);
+}
+
+size_t Cli::printStr(const char *text, int8_t width) {
+    return _impl.printStr(text, width, false);
+}
+
+size_t Cli::printlnHex(uint32_t number, int8_t width) {
     return _impl.printHex(number, width, true);
 }
 
-size_t Cli::printlnDec(uint32_t number, uint8_t width) {
+size_t Cli::printlnDec(uint32_t number, int8_t width) {
     return _impl.printDec(number, width, true);
+}
+
+size_t Cli::printlnStr(const __FlashStringHelper *text, int8_t width) {
+    return _impl.printStr(text, width, true);
+}
+
+size_t Cli::printlnStr(const char *text, int8_t width) {
+    return _impl.printStr(text, width, true);
 }
 
 size_t Cli::backspace(int8_t n) {
@@ -95,7 +111,7 @@ void Cli::readWord(
 
 void Cli::readLine(
         StringCallback callback, uintptr_t context, char *buffer, size_t size, bool hasDefval) {
-    _impl.setCallback(callback, context, buffer, size, hasDefval);
+    _impl.setCallback(callback, context, buffer, size, hasDefval, false);
 }
 
 void Cli::readHex(NumberCallback callback, uintptr_t context, uint32_t limit) {

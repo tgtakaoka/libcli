@@ -43,8 +43,8 @@ static bool isNewline(char c) {
 }
 
 /** Returns number of digits of |number| in |base|. */
-static uint8_t getDigits(uint32_t number, uint8_t base) {
-    uint8_t n = 0;
+static int8_t getDigits(uint32_t number, uint8_t base) {
+    int8_t n = 0;
     do {
         n++;
         number /= base;
@@ -52,23 +52,57 @@ static uint8_t getDigits(uint32_t number, uint8_t base) {
     return n;
 }
 
-size_t Impl::printHex(uint32_t number, uint8_t width, bool newline) {
+size_t Impl::pad_left(int8_t len, int8_t width, char pad) {
     size_t size = 0;
-    for (uint8_t n = getDigits(number, 16); n < width; n++) {
-        size += console->print('0');
-    }
+    for (auto n = width - len; n > 0; n--)
+        size += console->print(pad);
+    return size;
+}
+
+size_t Impl::pad_right(int8_t len, int8_t width, char pad) {
+    size_t size = 0;
+    for (auto n = width + len; n < 0; n++)
+        size += console->print(pad);
+    return size;
+}
+
+size_t Impl::printHex(uint32_t number, int8_t width, bool newline) {
+    const auto len = getDigits(number, 16);
+    size_t size = pad_left(len, width, '0');
     size += console->print(number, HEX);
+    size += pad_right(len, width, ' ');
     if (newline)
         size += console->println();
     return size;
 }
 
-size_t Impl::printDec(uint32_t number, uint8_t width, bool newline) {
-    size_t size = 0;
-    for (uint8_t n = getDigits(number, 10); n < width; n++) {
-        size += console->print(' ');
-    }
+size_t Impl::printDec(uint32_t number, int8_t width, bool newline) {
+    const auto len = getDigits(number, 10);
+    size_t size = pad_left(len, width, ' ');
     size += console->print(number, DEC);
+    size += pad_right(len, width, ' ');
+    if (newline)
+        size += console->println();
+    return size;
+}
+
+size_t Impl::printStr(const __FlashStringHelper *text, int8_t width, bool newline) {
+    const auto l = strlen_P(reinterpret_cast<const char *>(text));
+    const int8_t len = (l < INT8_MAX) ? l : INT8_MAX;
+    size_t size = pad_left(len, width, ' ');
+    size += console->print(text);
+    size += pad_right(len, width, ' ');
+    if (newline)
+        size += console->println();
+    return size;
+}
+
+size_t Impl::printStr(const char *text, int8_t width, bool newline) {
+    const auto l = strlen(text);
+    const int8_t len = (l < INT8_MAX) ? l : INT8_MAX;
+    size_t size = pad_left(len, width, ' ');
+    size += console->print(text);
+    size += pad_right(len, width, ' ');
     if (newline)
         size += console->println();
     return size;
@@ -116,7 +150,7 @@ void Impl::processString(char c) {
     } else if (isBackspace(c)) {
         if (str_len) {
             str_buffer[--str_len] = 0;
-            backspace();
+            backspace(1);
         } else if (str_word) {
             callback.string(str_buffer, context, State::CLI_DELETE);
         }
@@ -146,9 +180,9 @@ void Impl::setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t 
     num_value = defval;
     num_len = num_width;
     if (base == 10) {
-        printDec(num_value, num_len);
+        printDec(num_value, num_len, false);
     } else {
-        printHex(num_value, num_len);
+        printHex(num_value, num_len, false);
     }
 }
 
@@ -184,7 +218,7 @@ void Impl::processNumber(char c) {
         if (num_len) {
             num_value /= num_base;
             num_len--;
-            backspace();
+            backspace(1);
             return;
         }
         state = State::CLI_DELETE;
@@ -192,9 +226,9 @@ void Impl::processNumber(char c) {
         backspace(num_len);
         num_len = num_width;
         if (num_base == 10) {
-            printDec(num_value, num_len);
+            printDec(num_value, num_len, false);
         } else {
-            printHex(num_value, num_len);
+            printHex(num_value, num_len, false);
         }
         if (isNewline(c)) {
             console->print(' ');

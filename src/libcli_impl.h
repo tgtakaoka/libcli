@@ -37,16 +37,18 @@ struct Impl final {
 
     void setCallback(Cli::LetterCallback callback, uintptr_t context);
     void setCallback(Cli::StringCallback callback, uintptr_t context, char *buffer, size_t size,
-            bool hasDefval, bool word = false);
+            bool hasDefval, bool word);
     void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit, uint8_t base);
     void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
             uint32_t defval, uint8_t base);
 
     void process(char c) { (this->*processor)(c); }
 
-    size_t backspace(int8_t n = 1);
-    size_t printHex(uint32_t number, uint8_t width = 0, bool newline = false);
-    size_t printDec(uint32_t number, uint8_t width = 0, bool newline = false);
+    size_t backspace(int8_t n);
+    size_t printHex(uint32_t number, int8_t width, bool newline);
+    size_t printDec(uint32_t number, int8_t width, bool newline);
+    size_t printStr(const __FlashStringHelper *str, int8_t width, bool newline);
+    size_t printStr(const char *str, int8_t width, bool newline);
 
     /** No copy constructor. */
     Impl(Impl const &) = delete;
@@ -102,6 +104,8 @@ private:
     void processString(char c);
     void processNumber(char c);
     bool checkLimit(char c, uint8_t &n) const;
+    size_t pad_left(int8_t len, int8_t width, char pad);
+    size_t pad_right(int8_t len, int8_t width, char pad);
 };
 
 }  // namespace impl

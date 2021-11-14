@@ -137,6 +137,20 @@ static void handleDump(uint32_t value, uintptr_t context, State state) {
     Cli.printHex(last_addr, DUMP_ADDR_WIDTH);
     Cli.print(' ');
     Cli.printlnDec(value);
+    const auto end = last_addr + value;
+    for (auto base = last_addr & ~0xF; base < end; base += 16) {
+        Cli.printHex(base, DUMP_ADDR_WIDTH);
+        Cli.print(F(": "));
+        for (auto i = 0; i < 16; i++) {
+            const auto a = base + i;
+            if (a < last_addr || a >= end) {
+                Cli.printStr(F("_"), 4);
+            } else {
+                Cli.printDec(static_cast<uint8_t>(a), 4);
+            }
+        }
+        Cli.println();
+    }
     prompt();
 }
 
@@ -247,9 +261,9 @@ static void handleWord(char *word, uintptr_t context, State state) {
     for (size_t i = 0; i < index; i++) {
         Cli.print(F("  word "));
         Cli.printDec(i + 1);
-        Cli.print(F(": '"));
-        Cli.print(words[i]);
-        Cli.println('\'');
+        Cli.print(F(": "));
+        Cli.printStr(words[i], -10);
+        Cli.println(F("!"));
     }
     prompt();
 }

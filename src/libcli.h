@@ -26,6 +26,8 @@
 #define LIBCLI_VERSION_PATCH 2
 #define LIBCLI_VERSION_STRING "1.2.2"
 
+class __FlashStringHelper;
+
 namespace libcli {
 
 namespace impl {
@@ -96,24 +98,38 @@ public:
     void readDec(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval);
 
     /**
-     * Print |number| in 0-prefixed hexadecimal format of |width| chars.
+     * Print |number| in 0-prefixed hexadecimal format of |width| chars. Negative |width| means left
+     * aligned.
      */
-    size_t printHex(uint32_t number, uint8_t width = 0);
+    size_t printHex(uint32_t number, int8_t width = 0);
 
     /**
-     * Print |number| in right-aligned decimal format of |width| chars.
+     * Print |number| in right-aligned decimal format of |width| chars. Negative |width| means left
+     * aligned.
      */
-    size_t printDec(uint32_t number, uint8_t width = 0);
+    size_t printDec(uint32_t number, int8_t width = 0);
 
     /**
      * Print |number| in 0-prefixed hexadecimal format of |width| chars and newline.
      */
-    size_t printlnHex(uint32_t number, uint8_t width = 0);
+    size_t printlnHex(uint32_t number, int8_t width = 0);
 
     /**
      * Print |number| in right-aligned decimal format of |width| chars and newline.
      */
-    size_t printlnDec(uint32_t number, uint8_t width = 0);
+    size_t printlnDec(uint32_t number, int8_t width = 0);
+
+    /*
+     * Print |text| in right-aligned of |width| chars. Negative |width| means left-aligned.
+     */
+    size_t printStr(const __FlashStringHelper *text, int8_t width);
+    size_t printStr(const char *text, int8_t witdh);
+
+    /*
+     * Print |text| in right-aligned of |width| chars and newline.
+     */
+    size_t printlnStr(const __FlashStringHelper *text, int8_t width);
+    size_t printlnStr(const char *text, int8_t witdh);
 
     /**
      * Print backspace |n| times.
