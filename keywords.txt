@@ -19,6 +19,10 @@ readHex      KEYWORD2
 readDec      KEYWORD2
 printHex     KEYWORD2
 printDec     KEYWORD2
+printStr     KEYWORD2
+printlnHex   KEYWORD2
+printlnDec   KEYWORD2
+printlnStr   KEYWORD2
 backspace    KEYWORD2
 
 #######################################

@@ -20,10 +20,12 @@ instance as a command line interface which can
 * read a letter, a word string, a line of string, decimal and
   hexadecimal numer from serial console asynchronously.
 * act as `Stream` and do any form of `print()` and `println()`.
-* print decimal number in specified width as right aligned format,
-  such as `"%6d"` in `printf()`.
+* print decimal number with left or right aligned in a specified width
+  format, such as `"%-6d"` or `"%6d"` in `printf()`.
 * print hexadecimal number in specified fixed-width format, such as
   `"%08X"` in `printf()`.
+* print string with left or right aligned in a specified width, such
+  as `"%-8s"` or `"%8s"` in `printf()`.
 
 Asynchronous read can be implemented with *_request_* and
 *_callback_*.  For example, to read a 16-bit hexadecimal, call
@@ -58,8 +60,15 @@ The version 1.2 API has the following functions.
   void readLine(void (*)(const char*, uintptr_t, State) callback, uintptr_t context, char *buffer, size_t size, bool hasDefval = false);
   void readHex(void (*)(uint32_t, uintptr_t, State) callback, uintptr_t context, uint32_t limit = UINT32_MAX);
   void readDec(void (*)(uint32_t, uintptr_t, State) callback, uintptr_t context, uint23_t limit = UINt32_MAX)
-  void printHex(uint32_t number, uint8_t width = 0)
-  void printDec(uint32_t number, uint8_t width = 0)
+  void printStr(const char *text, int8_t width = 0)
+  void printStr(const __FlashStringHelper *text, int8_t width = 0)
+  void printHex(uint32_t number, int8_t width = 0)
+  void printDec(uint32_t number, int8_t width = 0)
+  void printlnStr(const char *text, int8_t width = 0)
+  void printlnStr(const __FlashStringHelper *text, int8_t width = 0)
+  void printlnHex(uint32_t number, int8_t width = 0)
+  void printlnDec(uint32_t number, int8_t width = 0)
+  void backspace(int8_t n = 1);
 
 NOTE: More information about this library can be found at
 https://github.com/tgtakaoka/libcli[GitHub]

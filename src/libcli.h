@@ -23,10 +23,8 @@
 
 #define LIBCLI_VERSION_MAJOR 1
 #define LIBCLI_VERSION_MINOR 2
-#define LIBCLI_VERSION_PATCH 2
-#define LIBCLI_VERSION_STRING "1.2.2"
-
-class __FlashStringHelper;
+#define LIBCLI_VERSION_PATCH 3
+#define LIBCLI_VERSION_STRING "1.2.3"
 
 namespace libcli {
 
