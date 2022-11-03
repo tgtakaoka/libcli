@@ -42,12 +42,13 @@ static bool isNewline(char c) {
     return c == '\n' || c == '\r';
 }
 
-/** Returns number of digits of |number| in |base|. */
-static int8_t getDigits(uint32_t number, uint8_t base) {
+/** Returns number of digits of |number| in |radix|. */
+static int8_t getDigits(uint32_t number, bool hex) {
+    const uint8_t radix = hex ? 16 : 10;
     int8_t n = 0;
     do {
         n++;
-        number /= base;
+        number /= radix;
     } while (number);
     return n;
 }
@@ -67,7 +68,7 @@ size_t Impl::pad_right(int8_t len, int8_t width, char pad) {
 }
 
 size_t Impl::printHex(uint32_t number, int8_t width, bool newline) {
-    const auto len = getDigits(number, 16);
+    const auto len = getDigits(number, true);
     size_t size = pad_left(len, width, '0');
     size += console->print(number, HEX);
     size += pad_right(len, width, ' ');
@@ -77,7 +78,7 @@ size_t Impl::printHex(uint32_t number, int8_t width, bool newline) {
 }
 
 size_t Impl::printDec(uint32_t number, int8_t width, bool newline) {
-    const auto len = getDigits(number, 10);
+    const auto len = getDigits(number, false);
     size_t size = pad_left(len, width, ' ');
     size += console->print(number, DEC);
     size += pad_right(len, width, ' ');
@@ -165,24 +166,24 @@ void Impl::processString(char c) {
 }
 
 void Impl::setCallback(
-        Cli::NumberCallback callback, uint32_t context, uint32_t limit, uint8_t base) {
+        Cli::NumberCallback callback, uint32_t context, uint32_t limit, bool hex) {
     this->callback.number = callback;
-    num_width = getDigits(num_limit = limit, num_base = base);
+    num_width = getDigits(num_limit = limit, num_hex = hex);
     num_value = 0;
     num_len = 0;
     setProcessor(&Impl::processNumber, context);
 }
 
 void Impl::setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
-        uint32_t defval, uint8_t base) {
-    setCallback(callback, context, limit, base);
+        uint32_t defval, bool hex) {
+    setCallback(callback, context, limit, hex);
     backspace(num_width);
     num_value = defval;
     num_len = num_width;
-    if (base == 10) {
-        printDec(num_value, num_len, false);
-    } else {
+    if (hex) {
         printHex(num_value, num_len, false);
+    } else {
+        printDec(num_value, num_len, false);
     }
 }
 
@@ -190,12 +191,12 @@ bool Impl::checkLimit(char c, uint8_t &n) const {
     if (num_len >= num_width)
         return false;
     c = toUpperCase(c);
-    if (num_base == 10 && isDigit(c)) {
+    if (!num_hex && isDigit(c)) {
         n = c - '0';
         const uint32_t limit = num_limit / 10;
         return num_value < limit || (num_value == limit && n <= (num_limit % 10));
     }
-    if (num_base == 16 && isHexadecimalDigit(c)) {
+    if (num_hex && isHexadecimalDigit(c)) {
         n = isDigit(c) ? c - '0' : c - 'A' + 10;
         const uint32_t limit = num_limit / 16;
         return num_value < limit || (num_value == limit && n <= (num_limit % 16));
@@ -204,9 +205,10 @@ bool Impl::checkLimit(char c, uint8_t &n) const {
 }
 
 void Impl::processNumber(char c) {
+    const uint8_t radix = num_hex ? 16 : 10;
     uint8_t n;
     if (checkLimit(c, n)) {
-        num_value *= num_base;
+        num_value *= radix;
         num_value += n;
         num_len++;
         console->print(c);
@@ -216,7 +218,7 @@ void Impl::processNumber(char c) {
     State state;
     if (isBackspace(c)) {
         if (num_len) {
-            num_value /= num_base;
+            num_value /= radix;
             num_len--;
             backspace(1);
             return;
@@ -225,10 +227,10 @@ void Impl::processNumber(char c) {
     } else if (isSpace(c) && num_len) {
         backspace(num_len);
         num_len = num_width;
-        if (num_base == 10) {
-            printDec(num_value, num_len, false);
-        } else {
+        if (num_hex) {
             printHex(num_value, num_len, false);
+        } else {
+            printDec(num_value, num_len, false);
         }
         if (isNewline(c)) {
             console->print(' ');

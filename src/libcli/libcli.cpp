@@ -123,19 +123,19 @@ void Cli::readLine(
 }
 
 void Cli::readHex(NumberCallback callback, uintptr_t context, uint32_t limit) {
-    _impl.setCallback(callback, context, limit, 16);
+    _impl.setCallback(callback, context, limit, true);
 }
 
 void Cli::readHex(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval) {
-    _impl.setCallback(callback, context, limit, defval, 16);
+    _impl.setCallback(callback, context, limit, defval, true);
 }
 
 void Cli::readDec(NumberCallback callback, uintptr_t context, uint32_t limit) {
-    _impl.setCallback(callback, context, limit, 10);
+    _impl.setCallback(callback, context, limit, false);
 }
 
 void Cli::readDec(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval) {
-    _impl.setCallback(callback, context, limit, defval, 10);
+    _impl.setCallback(callback, context, limit, defval, false);
 }
 
 void Cli::begin(Stream &console) {
