@@ -120,14 +120,16 @@ public:
     /*
      * Print |text| in right-aligned of |width| chars. Negative |width| means left-aligned.
      */
-    size_t printStr(const __FlashStringHelper *text, int8_t width);
-    size_t printStr(const char *text, int8_t witdh);
+    size_t printStr(const __FlashStringHelper *text, int8_t width = 0);
+    size_t printStr(const char *text, int8_t witdh = 0);
+    size_t printStr_P(const /*PROGMEM*/ char *text_P, int8_t witdh = 0);
 
     /*
      * Print |text| in right-aligned of |width| chars and newline.
      */
-    size_t printlnStr(const __FlashStringHelper *text, int8_t width);
-    size_t printlnStr(const char *text, int8_t witdh);
+    size_t printlnStr(const __FlashStringHelper *text, int8_t width = 0);
+    size_t printlnStr(const char *text, int8_t witdh = 0);
+    size_t printlnStr_P(const /*PROGMEM*/ char *text_P, int8_t witdh = 0);
 
     /**
      * Print backspace |n| times.

@@ -80,6 +80,10 @@ size_t Cli::printStr(const char *text, int8_t width) {
     return _impl.printStr(text, width, false);
 }
 
+size_t Cli::printStr_P(const /*PROGMEM*/ char *text_P, int8_t width) {
+    return _impl.printStr(reinterpret_cast<const __FlashStringHelper *>(text_P), width, false);
+}
+
 size_t Cli::printlnHex(uint32_t number, int8_t width) {
     return _impl.printHex(number, width, true);
 }
@@ -94,6 +98,10 @@ size_t Cli::printlnStr(const __FlashStringHelper *text, int8_t width) {
 
 size_t Cli::printlnStr(const char *text, int8_t width) {
     return _impl.printStr(text, width, true);
+}
+
+size_t Cli::printlnStr_P(const /*PROGMEM*/ char *text_P, int8_t width) {
+    return _impl.printStr(reinterpret_cast<const __FlashStringHelper *>(text_P), width, true);
 }
 
 size_t Cli::backspace(int8_t n) {
