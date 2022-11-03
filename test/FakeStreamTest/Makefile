@@ -1,4 +1,4 @@
-# Copyright 2021 Tadashi G. Takaoka
+# Copyright 2022 Tadashi G. Takaoka
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,23 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-help:
-	@echo '"make clean"    remove unnecessary files'
-	@echo '"make pio"      run PlatformIO CI'
-
-PIO_BOARDS=$(shell $(MAKE) -s -C examples/cli pio-boards)
-
-pio:
-	pio --no-ansi ci -l . $(PIO_BOARDS:%=-b %) examples/cli/cli.ino
-
-clean: 
-	$(MAKE) -C examples/cli clean
-	$(MAKE) -C test clean
-	rm -f $$(find . -type f -a -name '*~')
-
-.PHONY: help clean arduino pio
-
-# Local Variables:
-# mode: makefile-gmake
-# End:
-# vim: set ft=make:
+APP_NAME := FakeStreamTest
+ARDUINO_LIBS := libcli AUnit
+include ../libraries/EpoxyDuino/EpoxyDuino.mk

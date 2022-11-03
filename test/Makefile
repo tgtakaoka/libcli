@@ -1,4 +1,4 @@
-# Copyright 2021 Tadashi G. Takaoka
+# Copyright 2022 Tadashi G. Takaoka
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,22 +13,25 @@
 # limitations under the License.
 
 help:
-	@echo '"make clean"    remove unnecessary files'
-	@echo '"make pio"      run PlatformIO CI'
+	@echo '"make test"         run tests on host'
 
-PIO_BOARDS=$(shell $(MAKE) -s -C examples/cli pio-boards)
+TESTS := $(foreach t,$(wildcard */Makefile),$(t:%/Makefile=%))
+TEST_BINS := $(foreach t,$(TESTS),$(t)/$(t).out)
 
-pio:
-	pio --no-ansi ci -l . $(PIO_BOARDS:%=-b %) examples/cli/cli.ino
+define build-test # test
+$(1)/$(1).out: $(1)/$(1).ino
+	$(MAKE) -C $(1)
 
-clean: 
-	$(MAKE) -C examples/cli clean
-	$(MAKE) -C test clean
-	rm -f $$(find . -type f -a -name '*~')
+endef
 
-.PHONY: help clean arduino pio
+$(eval $(foreach t,$(TESTS),$(call build-test,$(t))))
 
-# Local Variables:
-# mode: makefile-gmake
-# End:
-# vim: set ft=make:
+test: $(TEST_BINS)
+	@for t in $(TESTS); do \
+	    ./$${t}/$${t}.out; \
+	done
+
+clean:
+	@for t in $(TESTS); do \
+	    $(MAKE) -C $${t} clean; \
+	done
