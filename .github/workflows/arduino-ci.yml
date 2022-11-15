@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        fqbn:
+        boards:
           - arduino:avr:nano
           - arduino:megaavr:nona4809
           - arduino:samd:nano_33_iot
@@ -29,10 +29,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
       - name: Compile Example
         uses: arduino/compile-sketches@v1
         with:
-          fqbn: ${{ matrix.fqbn }}
+          fqbn: ${{ matrix.boards }}
           sketch-paths: |
             - examples
 
+#      - name: Compile Example for ESP32
+#        uses: espressif/esp-idf-ci-action@latest
+#        with:
+#          target: esp32dev
+#          path: 'libcli/examples/cli'
+
+      - name: Compile Example for STM32
+        uses: stm32duino/actions/compile-examples@main
+        with:
+          board-pattern: 'NUCLEO_F411RE'
