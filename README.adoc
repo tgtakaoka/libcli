@@ -19,7 +19,7 @@ So `libcli` library comes for help. This library offers a singleton
 instance as a command line interface which can
 
 * read a letter, a word string, a line of string, decimal and
-  hexadecimal numer from serial console asynchronously.
+  hexadecimal number from serial console asynchronously.
 * act as `Stream` and do any form of `print()` and `println()`.
 * print decimal number with left or right aligned in a specified width
   format, such as `"%-6d"` or `"%6d"` in `printf()`.
@@ -36,40 +36,64 @@ finishes input with space or enter key, the `_callback_` function will
 be called with input `_value_`, the `_context_` passed in the
 *_request_*, and a input `_state_`.
 
-  libcli::Cli &cli = libcli::Cli::instance();
-  typedef libcli::Cli::State State;
-  void handleHex16(uint32_t value, uintptr_t context, State state) {
-      if (state == State::CLI_SPACE || state == State::CLI_ENTER) {
-          cli.printHex(value, sizeof(uint16) * 2);
-      }
-  }
-  void begin() {
-      Serial.begin(9600);
-      cli.begin(Serial);
-      cli.print(F("16bit Hex? "));
-      cli.readHex(handleHex16, context, UINT16_MAX);
-  }
-  void loop() {
-      cli.loop();
-      /* do other stuff */
-  }
+You can find concrete examples at
+https://github.com/tgtakaoka/libasm/blob/devel/src/arduino_example.h[libasm]
+and
+https://github.com/tgtakaoka/RetroCyborg/blob/main/BionicMC6801/debugger/commands.cpp[RetroCyborg].
+
+[source,C++]
+----
+libcli::Cli &cli = libcli::Cli::instance();
+typedef libcli::Cli::State State;
+
+/* NumberCallback function */
+void handleHex16(uint32_t value, uintptr_t context, State state) {
+    if (state == State::CLI_SPACE || state == State::CLI_ENTER) {
+        cli.printHex(value, sizeof(uint16_t) * 2);
+    }
+}
+
+void begin() {
+    Serial.begin(9600);
+    cli.begin(Serial);
+    cli.print(F("16bit Hex? "));
+    cli.readHex(handleHex16, context, UINT16_MAX);
+}
+
+void loop() {
+    cli.loop();
+    /* do other stuff */
+}
+----
 
 The version 1.2 API has the following functions.
 
-  void readLetter(void (*)(char, uintptr_t) callback, uintptr_t context);
-  void readWord(void (*)(const char*, uintptr_t, State) callback, uintptr_t context, char *buffer, size_t size, bool hasDefval = false);
-  void readLine(void (*)(const char*, uintptr_t, State) callback, uintptr_t context, char *buffer, size_t size, bool hasDefval = false);
-  void readHex(void (*)(uint32_t, uintptr_t, State) callback, uintptr_t context, uint32_t limit = UINT32_MAX);
-  void readDec(void (*)(uint32_t, uintptr_t, State) callback, uintptr_t context, uint23_t limit = UINt32_MAX)
-  void printStr(const char *text, int8_t width = 0)
-  void printStr(const __FlashStringHelper *text, int8_t width = 0)
-  void printHex(uint32_t number, int8_t width = 0)
-  void printDec(uint32_t number, int8_t width = 0)
-  void printlnStr(const char *text, int8_t width = 0)
-  void printlnStr(const __FlashStringHelper *text, int8_t width = 0)
-  void printlnHex(uint32_t number, int8_t width = 0)
-  void printlnDec(uint32_t number, int8_t width = 0)
-  void backspace(int8_t n = 1);
+[source,C++]
+----
+typedef void (*LetterCallback)(char letter, uintptr_t context);
+void readLetter(LetterCallback callback, uintptr_t context);
+
+typedef void (*StringCallback)(char *string, uintptr_t context, State state);
+void readWord(StringCallback callback, uintptr_t context, char *buffer, size_t size, bool hasDefval = false);
+void readLine(StringCallback callback, uintptr_t context, char *buffer, size_t size, bool hasDefval = false);
+
+typedef void (*NumberCallback)(uint32_t number, uintptr_t context, State state);
+void readHex(NumberCallback callback, uintptr_t context, uint32_t limit = UINT32_MAX);
+void readHex(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defVal);
+void readDec(NumberCallback callback, uintptr_t context, uint23_t limit = UINt32_MAX);
+void readDec(NumberCallback callback, uintptr_t context, uint23_t limit, uint32_t defVal);
+
+void printStr(const char *text, int8_t width = 0);
+void printStr(const __FlashStringHelper *text, int8_t width = 0);
+void printStr_P(const /*PROGMEM*/ char *text_P, int8_t width = 0);
+void printHex(uint32_t number, int8_t width = 0);
+void printDec(uint32_t number, int8_t width = 0);
+void printlnStr(const __FlashStringHelper *text, int8_t width = 0);
+void printlnStr_P(const /*PROGMEM*/ char *text_P, int8_t width = 0);
+void printlnHex(uint32_t number, int8_t width = 0);
+void printlnDec(uint32_t number, int8_t width = 0);
+void backspace(int8_t n = 1);
+----
 
 NOTE: More information about this library can be found at
 https://github.com/tgtakaoka/libcli[GitHub]
