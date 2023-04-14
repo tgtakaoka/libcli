@@ -14,4 +14,5 @@
 
 APP_NAME := ReadTextTest
 ARDUINO_LIBS := libcli AUnit
+CXXFLAGS += -g
 include ../libraries/EpoxyDuino/EpoxyDuino.mk

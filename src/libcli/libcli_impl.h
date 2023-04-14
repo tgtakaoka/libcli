@@ -38,8 +38,8 @@ struct Impl final {
     void setCallback(Cli::LetterCallback callback, uintptr_t context);
     void setCallback(Cli::StringCallback callback, uintptr_t context, char *buffer, size_t size,
             bool hasDefval, bool word);
-    void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit, bool hex);
-    void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
+    void setCallback(Cli::NumberCallback callback, uintptr_t context, uint32_t limit, bool hex);
+    void setCallback(Cli::NumberCallback callback, uintptr_t context, uint32_t limit,
             uint32_t defval, bool hex);
 
     void process(char c) { (this->*processor)(c); }

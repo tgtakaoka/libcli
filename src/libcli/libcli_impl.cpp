@@ -166,7 +166,7 @@ void Impl::processString(char c) {
 }
 
 void Impl::setCallback(
-        Cli::NumberCallback callback, uint32_t context, uint32_t limit, bool hex) {
+        Cli::NumberCallback callback, uintptr_t context, uint32_t limit, bool hex) {
     this->callback.number = callback;
     num_width = getDigits(num_limit = limit, num_hex = hex);
     num_value = 0;
@@ -174,7 +174,7 @@ void Impl::setCallback(
     setProcessor(&Impl::processNumber, context);
 }
 
-void Impl::setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
+void Impl::setCallback(Cli::NumberCallback callback, uintptr_t context, uint32_t limit,
         uint32_t defval, bool hex) {
     setCallback(callback, context, limit, hex);
     backspace(num_width);
