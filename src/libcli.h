@@ -22,9 +22,9 @@
 #include <Arduino.h>
 
 #define LIBCLI_VERSION_MAJOR 1
-#define LIBCLI_VERSION_MINOR 2
-#define LIBCLI_VERSION_PATCH 5
-#define LIBCLI_VERSION_STRING "1.2.5"
+#define LIBCLI_VERSION_MINOR 3
+#define LIBCLI_VERSION_PATCH 0
+#define LIBCLI_VERSION_STRING "1.3.0"
 
 #include "libcli_types.h"
 
