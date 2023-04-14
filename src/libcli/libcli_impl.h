@@ -29,9 +29,15 @@ namespace impl {
 
 /** Implementation detail of libcli. */
 struct Impl final {
-    void begin(Stream &stream) {
-        console = &stream;
-        setProcessor(&Impl::processNop, 0);
+private:
+    friend Cli;
+
+    Impl() : console(nullptr), processor(&Impl::processNop), context(0) {}
+
+    void begin(Stream &stream) { console = &stream; }
+    void loop() {
+        if (available())
+            (this->*processor)(read());
     }
 
     void setCallback(LetterCallback callback, uintptr_t context);
@@ -41,18 +47,11 @@ struct Impl final {
     void setCallback(NumberCallback callback, uintptr_t context, uint32_t limit,
             uint32_t defval, bool hex);
 
-    void process(char c) { (this->*processor)(c); }
-
     size_t backspace(int8_t n);
     size_t printHex(uint32_t number, int8_t width, bool newline);
     size_t printDec(uint32_t number, int8_t width, bool newline);
     size_t printStr(const __FlashStringHelper *str, int8_t width, bool newline);
     size_t printStr(const char *str, int8_t width, bool newline);
-
-    /** No copy constructor. */
-    Impl(Impl const &) = delete;
-    /** No assignment operator. */
-    void operator=(Impl const &) = delete;
 
     /** Delegate methods for Print. */
     size_t write(uint8_t val) { return console->write(val); }
@@ -65,7 +64,6 @@ struct Impl final {
     int peek() { return console->peek(); }
     void flush() { return console->flush(); }
 
-private:
     using Processor = void (Impl::*)(char c);
 
     Stream *console;
@@ -88,10 +86,6 @@ private:
     uint8_t num_len;
     uint8_t num_width;
 
-    /** Hidden default constructor. */
-    friend Cli;
-    Impl() : console(nullptr), processor(&Impl::processNop), context(0) {}
-
     void setProcessor(Processor processor_, uintptr_t context_) {
         processor = processor_;
         context = context_;
@@ -103,6 +97,11 @@ private:
     bool checkLimit(char c, uint8_t &n) const;
     size_t pad_left(int8_t len, int8_t width, char pad);
     size_t pad_right(int8_t len, int8_t width, char pad);
+
+    /** No copy constructor. */
+    Impl(Impl const &) = delete;
+    /** No assignment operator. */
+    void operator=(Impl const &) = delete;
 };
 
 }  // namespace impl

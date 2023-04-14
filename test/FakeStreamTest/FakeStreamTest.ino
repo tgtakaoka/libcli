@@ -20,8 +20,10 @@
 
 #include <libcli/fake/FakeStream.h>
 
+using FakeStream = libcli::fake::FakeStream;
+
 test(printTest, empty) {
-    libcli::fake::FakeStream stream;
+    FakeStream stream;
 
     assertEqual(stream.printerLength(), 0);
     assertEqual(stream.printerText(), "");
@@ -29,7 +31,7 @@ test(printTest, empty) {
 }
 
 test(printTest, writeChar) {
-    libcli::fake::FakeStream stream;
+    FakeStream stream;
 
     assertEqual((int)stream.write('c'), 1);
     assertEqual(stream.printerText(), "c");
@@ -46,7 +48,7 @@ test(printTest, writeChar) {
 }
 
 test(printTest, writeText) {
-    libcli::fake::FakeStream stream;
+    FakeStream stream;
 
     assertEqual((int)stream.write((const uint8_t *)"abcde", 3), 3);
     assertEqual(stream.printerText(), "abc");
@@ -60,7 +62,7 @@ test(printTest, writeText) {
 }
 
 test(streamTest, empty) {
-    libcli::fake::FakeStream stream;
+    FakeStream stream;
 
     assertEqual(stream.available(), 0);
     assertEqual(stream.peek(), -1);
@@ -68,7 +70,7 @@ test(streamTest, empty) {
 }
 
 test(streamTest, letter) {
-    libcli::fake::FakeStream stream;
+    FakeStream stream;
 
     stream.setInput('A');
     assertEqual(stream.available(), 1);
@@ -84,7 +86,7 @@ test(streamTest, letter) {
 }
 
 test(streamTest, text) {
-    libcli::fake::FakeStream stream;
+    FakeStream stream;
 
     {
         char text[] = {'a', 'b', 'c', 0};
@@ -108,7 +110,7 @@ test(streamTest, text) {
 }
 
 test(streamTest, text_P) {
-    libcli::fake::FakeStream stream;
+    FakeStream stream;
 
     stream.setInput(PSTR("abc"));
     assertEqual(stream.available(), 3);
@@ -130,7 +132,7 @@ test(streamTest, text_P) {
 
 
 test(streamTest, text_F) {
-    libcli::fake::FakeStream stream;
+    FakeStream stream;
 
     stream.setInput(F("abc"));
     assertEqual(stream.available(), 3);

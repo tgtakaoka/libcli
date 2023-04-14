@@ -14,56 +14,17 @@
  * limitations under the License.
  */
 
-#include "libcli.h"
-
-#include "libcli_impl.h"
-
 #include <stdint.h>
+
+#include "libcli.h"
 
 namespace libcli {
 
 /** [DEPRECATED] */
 Cli &Cli::instance() {
     /** The singleton of Cli. */
-    static impl::Impl impl{};
-    static Cli cli{impl};
+    static Cli cli{};
     return cli;
-}
-
-/**
- * Virual methods of Print class.
- */
-
-size_t Cli::write(uint8_t val) {
-    return _impl.write(val);
-}
-
-size_t Cli::write(const uint8_t *buffer, size_t size) {
-    return _impl.write(buffer, size);
-}
-
-int Cli::availableForWrite() {
-    return _impl.availableForWrite();
-}
-
-void Cli::flush() {
-    _impl.flush();
-}
-
-/**
- * Virtual methods of Stream class.
- */
-
-int Cli::available() {
-    return _impl.available();
-}
-
-int Cli::read() {
-    return _impl.read();
-}
-
-int Cli::peek() {
-    return _impl.peek();
 }
 
 size_t Cli::printHex(uint32_t number, int8_t width) {
@@ -138,16 +99,6 @@ void Cli::readDec(NumberCallback callback, uintptr_t context, uint32_t limit) {
 
 void Cli::readDec(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval) {
     _impl.setCallback(callback, context, limit, defval, false);
-}
-
-void Cli::begin(Stream &console) {
-    _impl.begin(console);
-}
-
-void Cli::loop() {
-    if (available()) {
-        _impl.process(read());
-    }
 }
 
 }  // namespace libcli

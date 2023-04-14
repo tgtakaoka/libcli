@@ -24,19 +24,23 @@
 #define NL "\r\n"
 #define BS "\b \b"
 
+using Cli = libcli::Cli;
 using State = libcli::Cli::State;
+using LetterCallback = libcli::Cli::LetterCallback;
+using StringCallback = libcli::Cli::StringCallback;
+using FakeStream = libcli::fake::FakeStream;
 
-static void inject(libcli::Cli &cli, int n = 10) {
+void inject(Cli &cli, int n = 10) {
     while (--n >= 0)
         cli.loop();
 }
 
 test(ReadTextTest, readLetter) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
-    libcli::Cli::LetterCallback callback = [](char letter, uintptr_t context) {
+    const LetterCallback callback = [](char letter, uintptr_t context) {
         *reinterpret_cast<char *>(context) = letter;
     };
 
@@ -59,16 +63,16 @@ struct Result {
         text = t;
         state = s;
     }
-    static libcli::Cli::StringCallback callback;
+    static const StringCallback callback;
 };
 
-libcli::Cli::StringCallback Result::callback = [](char *text, uintptr_t context, State state) {
+const StringCallback Result::callback = [](char *text, uintptr_t context, State state) {
     reinterpret_cast<Result *>(context)->set(text, state);
 };
 
 test(ReadTextTest, readWord) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -93,8 +97,8 @@ test(ReadTextTest, readWord) {
 }
 
 test(ReadTextTest, readWord_newline) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -119,8 +123,8 @@ test(ReadTextTest, readWord_newline) {
 }
 
 test(ReadTextTest, readWord_defaultValue) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -144,8 +148,8 @@ test(ReadTextTest, readWord_defaultValue) {
 }
 
 test(ReadTextTest, readWord_edit) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -164,8 +168,8 @@ test(ReadTextTest, readWord_edit) {
 }
 
 test(ReadTextTest, readWord_delete) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -184,8 +188,8 @@ test(ReadTextTest, readWord_delete) {
 }
 
 test(ReadTextTest, readWord_cancel) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -199,8 +203,8 @@ test(ReadTextTest, readWord_cancel) {
 }
 
 test(ReadTextTest, readLine) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -225,8 +229,8 @@ test(ReadTextTest, readLine) {
 }
 
 test(ReadTextTest, readLine_defaultValue) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -250,8 +254,8 @@ test(ReadTextTest, readLine_defaultValue) {
 }
 
 test(ReadTextTest, readLine_edit) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -270,8 +274,8 @@ test(ReadTextTest, readLine_edit) {
 }
 
 test(ReadTextTest, readLine_delete) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];
@@ -290,8 +294,8 @@ test(ReadTextTest, readLine_delete) {
 }
 
 test(ReadTextTest, readLine_cancel) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     char buffer[10];

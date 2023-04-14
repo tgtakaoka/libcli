@@ -24,9 +24,12 @@
 #define NL "\r\n"
 #define BS "\b \b"
 
+using Cli = libcli::Cli;
+using FakeStream = libcli::fake::FakeStream;
+
 test(printTest, printHex) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printHex(0x1234), (size_t)4);
@@ -51,8 +54,8 @@ test(printTest, printHex) {
 }
 
 test(printTest, printlnHex) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printlnHex(0x1234), (size_t)6);
@@ -77,8 +80,8 @@ test(printTest, printlnHex) {
 }
 
 test(printTest, printDec) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printDec(1234), (size_t)4);
@@ -103,8 +106,8 @@ test(printTest, printDec) {
 }
 
 test(printTest, printlnDec) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printlnDec(1234), (size_t)6);
@@ -129,8 +132,8 @@ test(printTest, printlnDec) {
 }
 
 test(printTest, printStr) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printStr("1234"), (size_t)4);
@@ -155,8 +158,8 @@ test(printTest, printStr) {
 }
 
 test(printTest, printlnStr) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printlnStr("1234"), (size_t)6);
@@ -181,8 +184,8 @@ test(printTest, printlnStr) {
 }
 
 test(printTest, printStrF) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printStr(F("1234")), (size_t)4);
@@ -207,8 +210,8 @@ test(printTest, printStrF) {
 }
 
 test(printTest, printlnStrF) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printlnStr(F("1234")), (size_t)6);
@@ -233,8 +236,8 @@ test(printTest, printlnStrF) {
 }
 
 test(printTest, printStr_P) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printStr_P(PSTR("1234")), (size_t)4);
@@ -259,8 +262,8 @@ test(printTest, printStr_P) {
 }
 
 test(printTest, printlnStr_P) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printlnStr_P(PSTR("1234")), (size_t)6);
@@ -285,8 +288,8 @@ test(printTest, printlnStr_P) {
 }
 
 test(printTest, backspace) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     assertEqual(cli.printStr("abc"), (size_t)3);

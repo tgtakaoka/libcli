@@ -26,9 +26,12 @@
 #define NL "\r\n"
 #define BS "\b \b"
 
+using Cli = libcli::Cli;
 using State = libcli::Cli::State;
+using NumberCallback = libcli::Cli::NumberCallback;
+using FakeStream = libcli::fake::FakeStream;
 
-static void inject(libcli::Cli &cli, int n = 10) {
+void inject(Cli &cli, int n = 10) {
     while (--n >= 0)
         cli.loop();
 }
@@ -43,16 +46,16 @@ struct Result {
         state = s;
         valid = true;
     }
-    static libcli::Cli::NumberCallback callback;
+    static const NumberCallback callback;
 };
 
-libcli::Cli::NumberCallback Result::callback = [](uint32_t number, uintptr_t context, State state) {
+const NumberCallback Result::callback = [](uint32_t number, uintptr_t context, State state) {
     reinterpret_cast<Result *>(context)->set(number, state);
 };
 
 test(ReadNumberTest, readHex) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     Result result;
@@ -77,8 +80,8 @@ test(ReadNumberTest, readHex) {
 }
 
 test(ReadNumberTest, readHex_limit) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     Result result;
@@ -120,8 +123,8 @@ test(ReadNumberTest, readHex_limit) {
 }
 
 test(ReadNumberTest, readHex_defaultValue) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     const uint32_t defval = 0x1234;
@@ -144,8 +147,8 @@ test(ReadNumberTest, readHex_defaultValue) {
 }
 
 test(ReadNumberTest, readHex_edit) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     const uint16_t defval = 0x1234;
@@ -168,8 +171,8 @@ test(ReadNumberTest, readHex_edit) {
 }
 
 test(ReadNumberTest, readHex_delete) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     const uint16_t defval = 0x1234;
@@ -192,8 +195,8 @@ test(ReadNumberTest, readHex_delete) {
 }
 
 test(ReadNumberTest, readHex_cancel) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     Result result;
@@ -208,8 +211,8 @@ test(ReadNumberTest, readHex_cancel) {
 }
 
 test(ReadNumberTest, readDec) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     Result result;
@@ -234,8 +237,8 @@ test(ReadNumberTest, readDec) {
 }
 
 test(ReadNumberTest, readDec_limit) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     Result result;
@@ -248,7 +251,7 @@ test(ReadNumberTest, readDec_limit) {
     stream.setInput("9900000");
     inject(cli);
     assertEqual(stream.printerText(), "9900");  // limit is in effect
-    assertFalse(result.valid);                 // no call back
+    assertFalse(result.valid);                  // no call back
     stream.flush();
 
     stream.setInput("\b\b99 ");
@@ -265,7 +268,7 @@ test(ReadNumberTest, readDec_limit) {
     stream.setInput("aBCd1x9");
     inject(cli);
     assertEqual(stream.printerText(), "1");  // limit is in effect
-    assertFalse(result.valid);                // no call back
+    assertFalse(result.valid);               // no call back
     stream.flush();
 
     stream.setInput("6\n");
@@ -277,8 +280,8 @@ test(ReadNumberTest, readDec_limit) {
 }
 
 test(ReadNumberTest, readDec_defaultValue) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     const uint32_t defval = 1234;
@@ -301,8 +304,8 @@ test(ReadNumberTest, readDec_defaultValue) {
 }
 
 test(ReadNumberTest, readDec_edit) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     const uint16_t defval = 1;
@@ -325,8 +328,8 @@ test(ReadNumberTest, readDec_edit) {
 }
 
 test(ReadNumberTest, readDec_delete) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     const uint16_t defval = 1234;
@@ -349,8 +352,8 @@ test(ReadNumberTest, readDec_delete) {
 }
 
 test(ReadNumberTest, readDec_cancel) {
-    libcli::fake::FakeStream stream;
-    auto &cli = libcli::Cli::instance();
+    FakeStream stream;
+    Cli cli;
     cli.begin(stream);
 
     Result result;

@@ -43,7 +43,7 @@ https://github.com/tgtakaoka/RetroCyborg/blob/main/BionicMC6801/debugger/command
 
 [source,C++]
 ----
-libcli::Cli &cli = libcli::Cli::instance();
+libcli::Cli cli;
 using State = libcli::State;
 
 /** NumberCallback function */

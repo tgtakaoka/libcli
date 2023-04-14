@@ -35,12 +35,13 @@ namespace libcli {
 /** Library interface of libcli. */
 class Cli final : public Stream {
 public:
-    /** [DEPRECATED] Get the singleton instance. */
-    static Cli &instance();
+
+    Cli() : _impl() {}
+
     /** Initialize with |console| as command line interface. */
-    void begin(Stream &console);
+    void begin(Stream &console) { _impl.begin(console); }
     /** Event loop; shold be called in Sketch's main loop(). */
-    void loop();
+    void loop() { _impl.loop(); }
 
     /**
      * A state what terminates user input.
@@ -151,15 +152,18 @@ public:
     size_t backspace(int8_t n = 1);
 
     /** Virtual methods of Print. */
-    size_t write(uint8_t val) override;
-    size_t write(const uint8_t *buffer, size_t size) override;
-    int availableForWrite() override;
+    size_t write(uint8_t val) override { return _impl.write(val); }
+    size_t write(const uint8_t *buffer, size_t size) override { return _impl.write(buffer, size); }
+    int availableForWrite() override { return _impl.availableForWrite(); }
 
     /** Virtual methods of Stream. */
-    int available() override;
-    int read() override;
-    int peek() override;
-    void flush() override;
+    int available() override { return _impl.available(); }
+    int read() override { return _impl.read(); }
+    int peek() override { return _impl.peek(); }
+    void flush() override { _impl.flush(); }
+
+    /** [DEPRECATED] Get the singleton instance. */
+    static Cli &instance();
 
     /** No copy constructor. */
     Cli(Cli const &) = delete;
@@ -168,11 +172,7 @@ public:
 
 private:
     /** Implemetation detail. */
-    impl::Impl &_impl;
-
-    /** The singleton is implemented in Cli::instance(). */
-    friend class impl::Impl;
-    Cli(impl::Impl &impl) : Stream(), _impl(impl) {}
+    impl::Impl _impl;
 };
 
 }  // namespace libcli
