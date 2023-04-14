@@ -15,8 +15,8 @@ interaction from serial console while controlling hardware etc.  Of
 course we can use `Serial.available()` in `loop()` and carefully use
 `Serial.read()` not to block program flow.
 
-So `libcli` library comes for help. This library offers a singleton
-instance as a command line interface which can
+So `libcli` library comes for help. This library offers a Cli instance
+as a command line interface which can
 
 * read a letter, a word string, a line of string, decimal and
   hexadecimal number from serial console asynchronously.
