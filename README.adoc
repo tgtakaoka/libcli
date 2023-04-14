@@ -44,9 +44,9 @@ https://github.com/tgtakaoka/RetroCyborg/blob/main/BionicMC6801/debugger/command
 [source,C++]
 ----
 libcli::Cli &cli = libcli::Cli::instance();
-typedef libcli::Cli::State State;
+using State = libcli::State;
 
-/* NumberCallback function */
+/** NumberCallback function */
 void handleHex16(uint32_t value, uintptr_t context, State state) {
     if (state == State::CLI_SPACE || state == State::CLI_ENTER) {
         cli.printHex(value, sizeof(uint16_t) * 2);
@@ -70,14 +70,17 @@ The version 1.2 API has the following functions.
 
 [source,C++]
 ----
-typedef void (*LetterCallback)(char letter, uintptr_t context);
+/** void (*LetterCallback)(char letter, uintptr_t context); */
+using LetterCallback = libcli::LetterCallback;
 void readLetter(LetterCallback callback, uintptr_t context);
 
-typedef void (*StringCallback)(char *string, uintptr_t context, State state);
+/** void (*StringCallback)(char *string, uintptr_t context, State state); */
+using StringCallback = libcli::StringCallback;
 void readWord(StringCallback callback, uintptr_t context, char *buffer, size_t size, bool hasDefval = false);
 void readLine(StringCallback callback, uintptr_t context, char *buffer, size_t size, bool hasDefval = false);
 
-typedef void (*NumberCallback)(uint32_t number, uintptr_t context, State state);
+/** void (*NumberCallback)(uint32_t number, uintptr_t context, State state); */
+using NumberCallback = libcli::NumberCallback;
 void readHex(NumberCallback callback, uintptr_t context, uint32_t limit = UINT32_MAX);
 void readHex(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defVal);
 void readDec(NumberCallback callback, uintptr_t context, uint23_t limit = UINt32_MAX);

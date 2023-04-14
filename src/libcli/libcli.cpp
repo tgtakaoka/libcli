@@ -22,9 +22,11 @@
 
 namespace libcli {
 
+/** [DEPRECATED] */
 Cli &Cli::instance() {
     /** The singleton of Cli. */
-    static Cli cli{impl::Impl::instance()};
+    static impl::Impl impl{};
+    static Cli cli{impl};
     return cli;
 }
 
