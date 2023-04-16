@@ -18,42 +18,40 @@
 #define __LIBCLI_IMPL_H__
 
 #include <Arduino.h>
-#include <stdint.h>
 
-#include "libcli.h"
+#include "libcli_types.h"
 
 namespace libcli {
+
+class Cli;
+
 namespace impl {
 
 /** Implementation detail of libcli. */
 struct Impl final {
-    /** Get the singleton instance. */
-    static constexpr Impl &instance() { return impl; }
+private:
+    friend Cli;
 
-    void begin(Stream &stream) {
-        console = &stream;
-        setProcessor(&Impl::processNop, 0);
+    Impl() : console(nullptr), processor(&Impl::processNop), context(0) {}
+
+    void begin(Stream &stream) { console = &stream; }
+    void loop() {
+        if (available())
+            (this->*processor)(read());
     }
 
-    void setCallback(Cli::LetterCallback callback, uintptr_t context);
-    void setCallback(Cli::StringCallback callback, uintptr_t context, char *buffer, size_t size,
+    void setCallback(LetterCallback callback, uintptr_t context);
+    void setCallback(StringCallback callback, uintptr_t context, char *buffer, size_t size,
             bool hasDefval, bool word);
-    void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit, bool hex);
-    void setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
+    void setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, bool hex);
+    void setCallback(NumberCallback callback, uintptr_t context, uint32_t limit,
             uint32_t defval, bool hex);
-
-    void process(char c) { (this->*processor)(c); }
 
     size_t backspace(int8_t n);
     size_t printHex(uint32_t number, int8_t width, bool newline);
     size_t printDec(uint32_t number, int8_t width, bool newline);
     size_t printStr(const __FlashStringHelper *str, int8_t width, bool newline);
     size_t printStr(const char *str, int8_t width, bool newline);
-
-    /** No copy constructor. */
-    Impl(Impl const &) = delete;
-    /** No assignment operator. */
-    void operator=(Impl const &) = delete;
 
     /** Delegate methods for Print. */
     size_t write(uint8_t val) { return console->write(val); }
@@ -66,22 +64,14 @@ struct Impl final {
     int peek() { return console->peek(); }
     void flush() { return console->flush(); }
 
-private:
-    /** The singleton of Impl. */
-    static Impl impl;
+    using Processor = void (Impl::*)(char c);
 
     Stream *console;
-
-    void setProcessor(void (Impl::*processor)(char), uintptr_t context) {
-        this->processor = processor;
-        this->context = context;
-    }
-
-    void (Impl::*processor)(char c);
+    Processor processor;
     union {
-        Cli::LetterCallback letter;
-        Cli::StringCallback string;
-        Cli::NumberCallback number;
+        LetterCallback letter;
+        StringCallback string;
+        NumberCallback number;
     } callback;
     uintptr_t context;
 
@@ -96,9 +86,10 @@ private:
     uint8_t num_len;
     uint8_t num_width;
 
-    /** Hidden efault constructor. */
-    Impl() {}
-
+    void setProcessor(Processor processor_, uintptr_t context_) {
+        processor = processor_;
+        context = context_;
+    }
     void processNop(char c) { (void)c; }
     void processLetter(char c);
     void processString(char c);
@@ -106,6 +97,11 @@ private:
     bool checkLimit(char c, uint8_t &n) const;
     size_t pad_left(int8_t len, int8_t width, char pad);
     size_t pad_right(int8_t len, int8_t width, char pad);
+
+    /** No copy constructor. */
+    Impl(Impl const &) = delete;
+    /** No assignment operator. */
+    void operator=(Impl const &) = delete;
 };
 
 }  // namespace impl

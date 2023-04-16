@@ -14,36 +14,29 @@
  * limitations under the License.
  */
 
+#include <string.h>
+
 #include "libcli_impl.h"
 
-#include <stdint.h>
-#include <string.h>
-#include "libcli.h"
-
-using namespace libcli;
-typedef Cli::State State;
-
 namespace libcli {
-
 namespace impl {
 
-/** Singleton */
-Impl Impl::impl;
+namespace {
 
-static bool isBackspace(char c) {
+bool isBackspace(char c) {
     return c == '\b' || c == '\x7f';
 }
 
-static bool isCancel(char c) {
+bool isCancel(char c) {
     return c == '\x03';
 }
 
-static bool isNewline(char c) {
+bool isNewline(char c) {
     return c == '\n' || c == '\r';
 }
 
 /** Returns number of digits of |number| in |radix|. */
-static int8_t getDigits(uint32_t number, bool hex) {
+int8_t getDigits(uint32_t number, bool hex) {
     const uint8_t radix = hex ? 16 : 10;
     int8_t n = 0;
     do {
@@ -52,6 +45,8 @@ static int8_t getDigits(uint32_t number, bool hex) {
     } while (number);
     return n;
 }
+
+}  // namespace
 
 size_t Impl::pad_left(int8_t len, int8_t width, char pad) {
     size_t size = 0;
@@ -116,7 +111,7 @@ size_t Impl::backspace(int8_t n) {
     return s;
 }
 
-void Impl::setCallback(Cli::LetterCallback callback, uintptr_t context) {
+void Impl::setCallback(LetterCallback callback, uintptr_t context) {
     this->callback.letter = callback;
     setProcessor(&Impl::processLetter, context);
 }
@@ -125,7 +120,7 @@ void Impl::processLetter(char c) {
     callback.letter(c, context);
 }
 
-void Impl::setCallback(Cli::StringCallback callback, uintptr_t context, char *buffer, size_t size,
+void Impl::setCallback(StringCallback callback, uintptr_t context, char *buffer, size_t size,
         bool hasDefval, bool word) {
     this->callback.string = callback;
     str_buffer = buffer;
@@ -142,22 +137,22 @@ void Impl::setCallback(Cli::StringCallback callback, uintptr_t context, char *bu
 void Impl::processString(char c) {
     if (isNewline(c)) {
         console->print(' ');
-        callback.string(str_buffer, context, State::CLI_NEWLINE);
+        callback.string(str_buffer, context, CLI_NEWLINE);
     } else if (isSpace(c) && str_word) {
         if (str_len) {  // can't accept leading spaces in word
             console->print(c);
-            callback.string(str_buffer, context, State::CLI_SPACE);
+            callback.string(str_buffer, context, CLI_SPACE);
         }
     } else if (isBackspace(c)) {
         if (str_len) {
             str_buffer[--str_len] = 0;
             backspace(1);
         } else if (str_word) {
-            callback.string(str_buffer, context, State::CLI_DELETE);
+            callback.string(str_buffer, context, CLI_DELETE);
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));
-        callback.string(str_buffer, context, State::CLI_CANCEL);
+        callback.string(str_buffer, context, CLI_CANCEL);
     } else if (str_len < str_limit) {
         str_buffer[str_len++] = c;
         str_buffer[str_len] = 0;
@@ -165,8 +160,7 @@ void Impl::processString(char c) {
     }
 }
 
-void Impl::setCallback(
-        Cli::NumberCallback callback, uint32_t context, uint32_t limit, bool hex) {
+void Impl::setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, bool hex) {
     this->callback.number = callback;
     num_width = getDigits(num_limit = limit, num_hex = hex);
     num_value = 0;
@@ -174,8 +168,8 @@ void Impl::setCallback(
     setProcessor(&Impl::processNumber, context);
 }
 
-void Impl::setCallback(Cli::NumberCallback callback, uint32_t context, uint32_t limit,
-        uint32_t defval, bool hex) {
+void Impl::setCallback(
+        NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval, bool hex) {
     setCallback(callback, context, limit, hex);
     backspace(num_width);
     num_value = defval;
@@ -223,7 +217,7 @@ void Impl::processNumber(char c) {
             backspace(1);
             return;
         }
-        state = State::CLI_DELETE;
+        state = CLI_DELETE;
     } else if (isSpace(c) && num_len) {
         backspace(num_len);
         num_len = num_width;
@@ -234,14 +228,14 @@ void Impl::processNumber(char c) {
         }
         if (isNewline(c)) {
             console->print(' ');
-            state = State::CLI_NEWLINE;
+            state = CLI_NEWLINE;
         } else {
             console->print(c);
-            state = State::CLI_SPACE;
+            state = CLI_SPACE;
         }
     } else if (isCancel(c)) {
         console->println(F(" cancel"));
-        state = State::CLI_CANCEL;
+        state = CLI_CANCEL;
     } else {
         return;
     }

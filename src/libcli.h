@@ -17,45 +17,60 @@
 #ifndef __LIBCLI_H__
 #define __LIBCLI_H__
 
-#include <Arduino.h>
 #include <stddef.h>
-#include <stdint.h>
+
+#include <Arduino.h>
 
 #define LIBCLI_VERSION_MAJOR 1
-#define LIBCLI_VERSION_MINOR 2
-#define LIBCLI_VERSION_PATCH 5
-#define LIBCLI_VERSION_STRING "1.2.5"
+#define LIBCLI_VERSION_MINOR 3
+#define LIBCLI_VERSION_PATCH 0
+#define LIBCLI_VERSION_STRING "1.3.0"
+
+#include "libcli_types.h"
+
+#include "libcli/libcli_impl.h"
 
 namespace libcli {
-
-namespace impl {
-class Impl;
-}
 
 /** Library interface of libcli. */
 class Cli final : public Stream {
 public:
-    /** Get the singleton instance. */
-    static Cli &instance();
+
+    Cli() : _impl() {}
+
     /** Initialize with |console| as command line interface. */
-    void begin(Stream &console);
+    void begin(Stream &console) { _impl.begin(console); }
     /** Event loop; shold be called in Sketch's main loop(). */
-    void loop();
+    void loop() { _impl.loop(); }
 
-    /** A state what terminates user input. */
-    enum State : uint8_t {
-        CLI_SPACE,    // an input is terminated by space.
-        CLI_NEWLINE,  // an input is terminated by newline.
-        CLI_DELETE,   // current input is canceled and back to previous.
-        CLI_CANCEL,   // whole input is canceled.
-    };
+    /**
+     * A state what terminates user input.
+     * enum State : uint8_t {
+     *   CLI_SPACE,    // an input is terminated by space.
+     *   CLI_NEWLINE,  // an input is terminated by newline.
+     *   CLI_DELETE,   // current input is canceled and back to previous.
+     *   CLI_CANCEL,   // whole input is canceled.
+     * };
+     */
+    using State = libcli::State;
 
-    /** Callback function of |readLetter|. */
-    typedef void (*LetterCallback)(char letter, uintptr_t context);
-    /** Callback function of |readWord| and |readLine|. */
-    typedef void (*StringCallback)(char *string, uintptr_t context, State state);
-    /** Callback function of |readHex| and |readDec|. */
-    typedef void (*NumberCallback)(uint32_t number, uintptr_t context, State state);
+    /**
+     * Callback function of |readLetter|.
+     * void (*LetterCallback)(char letter, uintptr_t context);
+     */
+    using LetterCallback = libcli::LetterCallback;
+
+    /**
+     * Callback function of |readWord| and |readLine|.
+     * void (*StringCallback)(char *string, uintptr_t context, State state);
+     */
+    using StringCallback = libcli::StringCallback;
+
+    /**
+     * Callback function of |readHex| and |readDec|.
+     * void (*NumberCallback)(uint32_t number, uintptr_t context, State state);
+     */
+    using NumberCallback = libcli::NumberCallback;
 
     /**
      * Read a single letter.
@@ -137,15 +152,18 @@ public:
     size_t backspace(int8_t n = 1);
 
     /** Virtual methods of Print. */
-    size_t write(uint8_t val) override;
-    size_t write(const uint8_t *buffer, size_t size) override;
-    int availableForWrite() override;
+    size_t write(uint8_t val) override { return _impl.write(val); }
+    size_t write(const uint8_t *buffer, size_t size) override { return _impl.write(buffer, size); }
+    int availableForWrite() override { return _impl.availableForWrite(); }
 
     /** Virtual methods of Stream. */
-    int available() override;
-    int read() override;
-    int peek() override;
-    void flush() override;
+    int available() override { return _impl.available(); }
+    int read() override { return _impl.read(); }
+    int peek() override { return _impl.peek(); }
+    void flush() override { _impl.flush(); }
+
+    /** [DEPRECATED] Get the singleton instance. */
+    static Cli &instance();
 
     /** No copy constructor. */
     Cli(Cli const &) = delete;
@@ -154,11 +172,7 @@ public:
 
 private:
     /** Implemetation detail. */
-    impl::Impl &_impl;
-
-    /** The singleton is implemented in Cli::instance(). */
-    friend class impl::Impl;
-    Cli(impl::Impl &impl) : Stream(), _impl(impl) {}
+    impl::Impl _impl;
 };
 
 }  // namespace libcli
