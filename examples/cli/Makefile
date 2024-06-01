@@ -16,24 +16,27 @@ help:
 	@echo '"make clean"    remove unnecessary files'
 	@echo '"make pio"      run PlatformIO CI'
 
-PIO_ENVS=$(shell grep -Po '^\[env:\K[^]]+' platformio.ini)
-LIB_ENVS=$(PIO_ENVS:%=.pio/libdeps/%)
-PIO_BOARDS=$(shell grep -Po '^board *= *\K[\w]+' platformio.ini)
+ifdef INSIDE_EMACS
+ifeq ($(filter $(PIO_FLAGS),"--no-ansi"),)
+PIO_FLAGS += --no-ansi
+endif
+endif
 
-install_local_lib:
-	for lib in $(LIB_ENVS); do \
-	    test -h $${lib}/libcli && continue; \
-	    mkdir -p $${lib} && rm -rf $${lib}/libcli; \
-	    ln -s $${PWD}/../.. $${lib}/libcli; \
-	done
+ENVS=$(shell grep -Po '^\[env:\K[^]]+' platformio.ini)
+BOARDS=$(shell grep -Po '^board *= *\K[\w]+' platformio.ini)
 
-pio: install_local_lib
-	pio --no-ansi run $(PIO_ENVS:%=-e %)
+define pio-ci # board
+	pio $(PIO_FLAGS) ci -l ../.. $(PIO_CI_FLAGS) -b $(1) cli.ino
+
+endef
+
+pio:
+	$(foreach board,$(BOARDS),$(call pio-ci,$(board)))
 
 pio-boards: platformio.ini
-	@echo $(PIO_BOARDS)
+	@echo $(BOARDS)
 pio-envs: platformio.ini
-	@echo $(PIO_ENVS)
+	@echo $(ENVS)
 
 clean: 
 	rm -rf $$(find . -type d -a -name .pio)

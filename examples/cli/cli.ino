@@ -17,15 +17,15 @@
 #include <libcli.h>
 
 /** Get the singleton instance. */
-libcli::Cli &Cli = libcli::Cli::instance();
-typedef libcli::Cli::State State;
+libcli::Cli cli;
+using State = libcli::Cli::State;
 
 static void handleCommand(char letter, uintptr_t context);
 
 /** print prompt and request letter input */
 static void prompt() {
-    Cli.print(F("> "));
-    Cli.readLetter(handleCommand, 0);
+    cli.print(F("> "));
+    cli.readLetter(handleCommand, 0);
 }
 
 /** callback for readDec */
@@ -43,26 +43,26 @@ static void handleAddDec(uint32_t value, uintptr_t context, State state) {
     if (state == State::CLI_DELETE) {
         if (context == ADD_LEFT)
             return;
-        Cli.backspace();
-        Cli.readDec(handleAddDec, ADD_LEFT, DEC_LIMIT, last_num);
+        cli.backspace();
+        cli.readDec(handleAddDec, ADD_LEFT, DEC_LIMIT, last_num);
         return;
     }
     if (context == ADD_LEFT) {
         last_num = value;
         if (state == State::CLI_SPACE) {
-            Cli.readDec(handleAddDec, ADD_RIGHT, DEC_LIMIT);
+            cli.readDec(handleAddDec, ADD_RIGHT, DEC_LIMIT);
             return;
         }
         value = 1;
     }
 
-    Cli.println();
-    Cli.print(F("add integers: "));
-    Cli.printDec(last_num);
-    Cli.print(F(" + "));
-    Cli.printDec(value);
-    Cli.print(F(" = "));
-    Cli.printlnDec(last_num + value);
+    cli.println();
+    cli.print(F("add integers: "));
+    cli.printDec(last_num);
+    cli.print(F(" + "));
+    cli.printDec(value);
+    cli.print(F(" = "));
+    cli.printlnDec(last_num + value);
     prompt();
 }
 
@@ -80,26 +80,26 @@ static void handleAddHex(uint32_t value, uintptr_t context, State state) {
     if (state == State::CLI_DELETE) {
         if (context == ADD_LEFT)
             return;
-        Cli.backspace();
-        Cli.readHex(handleAddHex, ADD_LEFT, HEX_LIMIT, last_num);
+        cli.backspace();
+        cli.readHex(handleAddHex, ADD_LEFT, HEX_LIMIT, last_num);
         return;
     }
     if (context == ADD_LEFT) {
         last_num = value;
         if (state == State::CLI_SPACE) {
-            Cli.readHex(handleAddHex, ADD_RIGHT, HEX_LIMIT);
+            cli.readHex(handleAddHex, ADD_RIGHT, HEX_LIMIT);
             return;
         }
         value = 1;
     }
 
-    Cli.println();
-    Cli.print(F("add hexadecimal: "));
-    Cli.printHex(last_num, HEX_WIDTH);
-    Cli.print(F(" + "));
-    Cli.printHex(value, HEX_WIDTH);
-    Cli.print(F(" = "));
-    Cli.printlnHex(last_num + value, HEX_WIDTH);
+    cli.println();
+    cli.print(F("add hexadecimal: "));
+    cli.printHex(last_num, HEX_WIDTH);
+    cli.print(F(" + "));
+    cli.printHex(value, HEX_WIDTH);
+    cli.print(F(" = "));
+    cli.printlnHex(last_num + value, HEX_WIDTH);
     prompt();
 }
 
@@ -119,37 +119,37 @@ static void handleDump(uint32_t value, uintptr_t context, State state) {
     if (state == State::CLI_DELETE) {
         if (context == DUMP_ADDRESS)
             return;
-        Cli.backspace();
-        Cli.readHex(handleDump, DUMP_ADDRESS, DUMP_ADDR_LIMIT, last_addr);
+        cli.backspace();
+        cli.readHex(handleDump, DUMP_ADDRESS, DUMP_ADDR_LIMIT, last_addr);
         return;
     }
     if (context == DUMP_ADDRESS) {
         last_addr = value;
         if (state == State::CLI_SPACE) {
-            Cli.readDec(handleDump, DUMP_LENGTH, UINT16_MAX);
+            cli.readDec(handleDump, DUMP_LENGTH, UINT16_MAX);
             return;
         }
         value = 16;
     }
 
-    Cli.println();
-    Cli.print(F("dump memory: "));
-    Cli.printHex(last_addr, DUMP_ADDR_WIDTH);
-    Cli.print(' ');
-    Cli.printlnDec(value);
+    cli.println();
+    cli.print(F("dump memory: "));
+    cli.printHex(last_addr, DUMP_ADDR_WIDTH);
+    cli.print(' ');
+    cli.printlnDec(value);
     const auto end = last_addr + value;
     for (auto base = last_addr & ~0xF; base < end; base += 16) {
-        Cli.printHex(base, DUMP_ADDR_WIDTH);
-        Cli.print(F(": "));
+        cli.printHex(base, DUMP_ADDR_WIDTH);
+        cli.print(F(": "));
         for (auto i = 0; i < 16; i++) {
             const auto a = base + i;
             if (a < last_addr || a >= end) {
-                Cli.printStr(F("_"), 4);
+                cli.printStr(F("_"), 4);
             } else {
-                Cli.printDec(static_cast<uint8_t>(a), 4);
+                cli.printDec(static_cast<uint8_t>(a), 4);
             }
         }
-        Cli.println();
+        cli.println();
     }
     prompt();
 }
@@ -174,37 +174,37 @@ static void handleMemory(uint32_t value, uintptr_t context, State state) {
     if (state == State::CLI_DELETE) {
         if (context == MEMORY_ADDRESS)
             return;
-        Cli.backspace();
+        cli.backspace();
         if (index == 0) {
-            Cli.readHex(handleMemory, MEMORY_ADDRESS, MEMORY_ADDR_LIMIT, last_addr);
+            cli.readHex(handleMemory, MEMORY_ADDRESS, MEMORY_ADDR_LIMIT, last_addr);
             return;
         }
         index--;
-        Cli.readHex(handleMemory, MEMORY_INDEX(index), UINT8_MAX, mem_buffer[index]);
+        cli.readHex(handleMemory, MEMORY_INDEX(index), UINT8_MAX, mem_buffer[index]);
         return;
     }
     if (context == MEMORY_ADDRESS) {
         last_addr = value;
-        Cli.readHex(handleMemory, MEMORY_INDEX(0), UINT8_MAX);
+        cli.readHex(handleMemory, MEMORY_INDEX(0), UINT8_MAX);
         return;
     }
 
     mem_buffer[index++] = value;
     if (state == State::CLI_SPACE) {
         if (index < sizeof(mem_buffer)) {
-            Cli.readHex(handleMemory, MEMORY_INDEX(index), UINT8_MAX);
+            cli.readHex(handleMemory, MEMORY_INDEX(index), UINT8_MAX);
             return;
         }
     }
 
-    Cli.println();
-    Cli.print(F("write memory: "));
-    Cli.printHex(last_addr, MEMORY_ADDR_WIDTH);
+    cli.println();
+    cli.print(F("write memory: "));
+    cli.printHex(last_addr, MEMORY_ADDR_WIDTH);
     for (uint8_t i = 0; i < index; i++) {
-        Cli.print(' ');
-        Cli.printHex(mem_buffer[i], 2);
+        cli.print(' ');
+        cli.printHex(mem_buffer[i], 2);
     }
-    Cli.println();
+    cli.println();
     prompt();
 }
 
@@ -214,10 +214,10 @@ static char str_buffer[40];
 static void handleLoad(char *line, uintptr_t context, State state) {
     (void)context;
     if (state != State::CLI_CANCEL) {
-        Cli.println();
-        Cli.print(F("load file: '"));
-        Cli.print(line);
-        Cli.println('\'');
+        cli.println();
+        cli.print(F("load file: '"));
+        cli.print(line);
+        cli.println('\'');
     }
     prompt();
 }
@@ -236,34 +236,34 @@ static void handleWord(char *word, uintptr_t context, State state) {
     size_t index = context;
     if (state == State::CLI_DELETE) {
         if (index != 0) {
-            Cli.backspace();
+            cli.backspace();
             index--;
             strcpy(str_buffer, words[index]);
-            Cli.readWord(handleWord, index, str_buffer, WORD_LEN, true);
+            cli.readWord(handleWord, index, str_buffer, WORD_LEN, true);
         }
         return;
     }
 
     strncpy(words[index], word, WORD_LEN);
     words[index][0] = toUpperCase(words[index][0]);
-    Cli.backspace(strlen(words[index]) + 1);
-    Cli.print(words[index]);
+    cli.backspace(strlen(words[index]) + 1);
+    cli.print(words[index]);
     index++;
     if (state == State::CLI_SPACE) {
         if (index < WORD_MAX) {
-            Cli.print(' ');
-            Cli.readWord(handleWord, index, str_buffer, WORD_LEN);
+            cli.print(' ');
+            cli.readWord(handleWord, index, str_buffer, WORD_LEN);
             return;
         }
     }
 
-    Cli.println();
+    cli.println();
     for (size_t i = 0; i < index; i++) {
-        Cli.print(F("  word "));
-        Cli.printDec(i + 1);
-        Cli.print(F(": "));
-        Cli.printStr(words[i], -10);
-        Cli.println(F("!"));
+        cli.print(F("  word "));
+        cli.printDec(i + 1);
+        cli.print(F(": "));
+        cli.printStr(words[i], -10);
+        cli.println(F("!"));
     }
     prompt();
 }
@@ -271,63 +271,63 @@ static void handleWord(char *word, uintptr_t context, State state) {
 /** callback for readLetter */
 static void handleCommand(char letter, uintptr_t context) {
     if (letter == 's') {
-        Cli.print(F("step"));
+        cli.print(F("step"));
     }
     if (letter == 'a') {
-        Cli.print(F("add decimal "));
-        Cli.readDec(handleAddDec, ADD_LEFT, DEC_LIMIT);
+        cli.print(F("add decimal "));
+        cli.readDec(handleAddDec, ADD_LEFT, DEC_LIMIT);
         return;
     }
     if (letter == 'h') {
-        Cli.print(F("add hexadecimal "));
-        Cli.readHex(handleAddHex, ADD_LEFT, HEX_LIMIT);
+        cli.print(F("add hexadecimal "));
+        cli.readHex(handleAddHex, ADD_LEFT, HEX_LIMIT);
         return;
     }
     if (letter == 'l') {
-        Cli.print(F("load "));
-        Cli.readLine(handleLoad, 0, str_buffer, sizeof(str_buffer));
+        cli.print(F("load "));
+        cli.readLine(handleLoad, 0, str_buffer, sizeof(str_buffer));
         return;
     }
     if (letter == 'w') {
-        Cli.print(F("word "));
-        Cli.readWord(handleWord, 0, str_buffer, WORD_LEN);
+        cli.print(F("word "));
+        cli.readWord(handleWord, 0, str_buffer, WORD_LEN);
         return;
     }
     if (letter == 'd') {
-        Cli.print(F("dump "));
-        Cli.readHex(handleDump, DUMP_ADDRESS, DUMP_ADDR_LIMIT);
+        cli.print(F("dump "));
+        cli.readHex(handleDump, DUMP_ADDRESS, DUMP_ADDR_LIMIT);
         return;
     }
     if (letter == 'm') {
-        Cli.print(F("memory "));
-        Cli.readHex(handleMemory, MEMORY_ADDRESS, MEMORY_ADDR_LIMIT);
+        cli.print(F("memory "));
+        cli.readHex(handleMemory, MEMORY_ADDRESS, MEMORY_ADDR_LIMIT);
         return;
     }
     if (letter == '?') {
-        Cli.print(F("libcli (version "));
-        Cli.print(LIBCLI_VERSION_STRING);
-        Cli.println(F(") example"));
-        Cli.println(F("  ?: help"));
-        Cli.println(F("  s: step"));
-        Cli.println(F("  a: add decimal"));
-        Cli.println(F("  h: add hexadecimal"));
-        Cli.println(F("  l: load <filename>"));
-        Cli.println(F("  w: word <word>..."));
-        Cli.println(F("  d: dump <address> <length>"));
-        Cli.print(F("  m: memory <address> <byte>..."));
+        cli.print(F("libcli (version "));
+        cli.print(LIBCLI_VERSION_STRING);
+        cli.println(F(") example"));
+        cli.println(F("  ?: help"));
+        cli.println(F("  s: step"));
+        cli.println(F("  a: add decimal"));
+        cli.println(F("  h: add hexadecimal"));
+        cli.println(F("  l: load <filename>"));
+        cli.println(F("  w: word <word>..."));
+        cli.println(F("  d: dump <address> <length>"));
+        cli.print(F("  m: memory <address> <byte>..."));
     }
-    Cli.println();
+    cli.println();
     prompt();
 }
 
 void setup() {
     Serial.begin(9600);
-    Cli.begin(Serial);
+    cli.begin(Serial);
     prompt();
 }
 
 void loop() {
-    Cli.loop();
+    cli.loop();
 }
 
 // Local Variables:
