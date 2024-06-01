@@ -18,6 +18,15 @@
     ],
     "licence": "Apache-2.0",
     "homepage": "https://github.com/tgtakaoka/libcli/",
-    "frameworks": "Arduino",
-    "platforms": "*"
+    "frameworks": "arduino",
+    "platforms": "*",
+    "export": {
+        "include": [
+            "src",
+            "examples",
+            "library.json",
+            "LICENSE.md",
+            "README.md"
+        ]
+    }
 }
