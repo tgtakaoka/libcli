@@ -1,5 +1,5 @@
-image:https://img.shields.io/github/v/release/tgtakaoka/libcli.svg?maxAge=3600[https://github.com/tgtakaoka/libcli/releases]
 image:https://img.shields.io/badge/License-Apache%202.0-blue.svg[https://github.com/tgtakaoka/libcli/blob/main/LICENSE.md]
+image:https://img.shields.io/github/v/release/tgtakaoka/libcli.svg?maxAge=3600[https://github.com/tgtakaoka/libcli/releases]
 image:https://github.com/tgtakaoka/libcli/actions/workflows/ccpp.yml/badge.svg[link="https://github.com/tgtakaoka/libcli/actions/workflows/ccpp.yml"]
 image:https://github.com/tgtakaoka/libcli/actions/workflows/arduino-ci.yml/badge.svg[link="https://github.com/tgtakaoka/libcli/actions/workflows/arduino-ci.yml"]
 image:https://github.com/tgtakaoka/libcli/actions/workflows/platformio-ci.yml/badge.svg[https://github.com/tgtakaoka/libcli/actions/workflows/platformio-ci.yml]
@@ -37,9 +37,9 @@ be called with input `_value_`, the `_context_` passed in the
 *_request_*, and a input `_state_`.
 
 You can find concrete examples at
-https://github.com/tgtakaoka/libasm/blob/devel/src/arduino_example.h[libasm]
+https://github.com/tgtakaoka/libasm/blob/main/src/arduino_example.h[libasm]
 and
-https://github.com/tgtakaoka/RetroCyborg/blob/main/BionicMC6801/debugger/commands.cpp[RetroCyborg].
+https://github.com/tgtakaoka/retro-bionic/blob/main/debugger/debugger.cpp[retro-bionic].
 
 [source,C++]
 ----
