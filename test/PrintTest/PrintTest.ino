@@ -131,6 +131,74 @@ test(printTest, printlnDec) {
     stream.flush();
 }
 
+test(printTest, printNum) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    assertEqual(cli.printNum(1234), (size_t)4);
+    assertEqual(stream.printerText(), "1234");
+    stream.flush();
+
+    assertEqual(cli.printNum(01234, OCT), (size_t)4);
+    assertEqual(stream.printerText(), "1234");
+    stream.flush();
+
+    assertEqual(cli.printNum(0x123, BIN), (size_t)9);
+    assertEqual(stream.printerText(), "100100011");
+    stream.flush();
+
+    assertEqual(cli.printNum(0x123, BIN, 16), (size_t)16);
+    assertEqual(stream.printerText(), "0000000100100011");
+    stream.flush();
+
+    assertEqual(cli.printNum(01234, OCT, -8), (size_t)8);
+    assertEqual(stream.printerText(), "1234    ");
+    stream.flush();
+
+    assertEqual(cli.printNum(01234, OCT, 8), (size_t)8);
+    assertEqual(stream.printerText(), "00001234");
+    stream.flush();
+
+    assertEqual(cli.printNum(01234567, OCT, -4), (size_t)7);
+    assertEqual(stream.printerText(), "1234567");
+    stream.flush();
+}
+
+test(printTest, printlnNum) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    assertEqual(cli.printlnNum(1234), (size_t)6);
+    assertEqual(stream.printerText(), "1234" NL);
+    stream.flush();
+
+    assertEqual(cli.printlnNum(01234, OCT), (size_t)6);
+    assertEqual(stream.printerText(), "1234" NL);
+    stream.flush();
+
+    assertEqual(cli.printlnNum(0x123, BIN), (size_t)11);
+    assertEqual(stream.printerText(), "100100011" NL);
+    stream.flush();
+
+    assertEqual(cli.printlnNum(0x123, BIN, 16), (size_t)18);
+    assertEqual(stream.printerText(), "0000000100100011" NL);
+    stream.flush();
+
+    assertEqual(cli.printlnNum(01234, OCT, -8), (size_t)10);
+    assertEqual(stream.printerText(), "1234    " NL);
+    stream.flush();
+
+    assertEqual(cli.printlnNum(01234, OCT, 8), (size_t)10);
+    assertEqual(stream.printerText(), "00001234" NL);
+    stream.flush();
+
+    assertEqual(cli.printlnNum(01234567, OCT, -4), (size_t)9);
+    assertEqual(stream.printerText(), "1234567" NL);
+    stream.flush();
+}
+
 test(printTest, printStr) {
     FakeStream stream;
     Cli cli;

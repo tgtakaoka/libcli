@@ -43,13 +43,12 @@ private:
     void setCallback(LetterCallback callback, uintptr_t context);
     void setCallback(StringCallback callback, uintptr_t context, char *buffer, size_t size,
             bool hasDefval, bool word);
-    void setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, bool hex);
-    void setCallback(NumberCallback callback, uintptr_t context, uint32_t limit,
-            uint32_t defval, bool hex);
+    void setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, uint8_t radix);
+    void setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval,
+            uint8_t radix);
 
     size_t backspace(int8_t n);
-    size_t printHex(uint32_t number, int8_t width, bool newline);
-    size_t printDec(uint32_t number, int8_t width, bool newline);
+    size_t printNum(uint32_t number, int8_t width, uint8_t radix, bool newline);
     size_t printStr(const __FlashStringHelper *str, int8_t width, bool newline);
     size_t printStr(const char *str, int8_t width, bool newline);
 
@@ -82,7 +81,7 @@ private:
 
     uint32_t num_value;
     uint32_t num_limit;
-    bool num_hex;
+    uint8_t num_radix;
     uint8_t num_len;
     uint8_t num_width;
 

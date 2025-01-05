@@ -36,8 +36,7 @@ bool isNewline(char c) {
 }
 
 /** Returns number of digits of |number| in |radix|. */
-int8_t getDigits(uint32_t number, bool hex) {
-    const uint8_t radix = hex ? 16 : 10;
+int8_t getDigits(uint32_t number, uint8_t radix) {
     int8_t n = 0;
     do {
         n++;
@@ -62,20 +61,10 @@ size_t Impl::pad_right(int8_t len, int8_t width, char pad) {
     return size;
 }
 
-size_t Impl::printHex(uint32_t number, int8_t width, bool newline) {
-    const auto len = getDigits(number, true);
-    size_t size = pad_left(len, width, '0');
-    size += console->print(number, HEX);
-    size += pad_right(len, width, ' ');
-    if (newline)
-        size += console->println();
-    return size;
-}
-
-size_t Impl::printDec(uint32_t number, int8_t width, bool newline) {
-    const auto len = getDigits(number, false);
-    size_t size = pad_left(len, width, ' ');
-    size += console->print(number, DEC);
+size_t Impl::printNum(uint32_t number, int8_t width, uint8_t radix, bool newline) {
+    const auto len = getDigits(number, radix);
+    size_t size = pad_left(len, width, radix == 10 ? ' ' : '0');
+    size += console->print(number, radix);
     size += pad_right(len, width, ' ');
     if (newline)
         size += console->println();
@@ -160,37 +149,33 @@ void Impl::processString(char c) {
     }
 }
 
-void Impl::setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, bool hex) {
+void Impl::setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, uint8_t radix) {
     this->callback.number = callback;
-    num_width = getDigits(num_limit = limit, num_hex = hex);
+    num_width = getDigits(num_limit = limit, num_radix = radix);
     num_value = 0;
     num_len = 0;
     setProcessor(&Impl::processNumber, context);
 }
 
-void Impl::setCallback(
-        NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval, bool hex) {
-    setCallback(callback, context, limit, hex);
+void Impl::setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval,
+        uint8_t radix) {
+    setCallback(callback, context, limit, radix);
     backspace(num_width);
     num_value = defval;
     num_len = num_width;
-    if (hex) {
-        printHex(num_value, num_len, false);
-    } else {
-        printDec(num_value, num_len, false);
-    }
+    printNum(num_value, num_len, radix, false);
 }
 
 bool Impl::checkLimit(char c, uint8_t &n) const {
     if (num_len >= num_width)
         return false;
     c = toUpperCase(c);
-    if (!num_hex && isDigit(c)) {
+    if (num_radix <= 10 && isDigit(c) && c < num_radix + '0') {
         n = c - '0';
-        const uint32_t limit = num_limit / 10;
-        return num_value < limit || (num_value == limit && n <= (num_limit % 10));
+        const uint32_t limit = num_limit / num_radix;
+        return num_value < limit || (num_value == limit && n <= (num_limit % num_radix));
     }
-    if (num_hex && isHexadecimalDigit(c)) {
+    if (num_radix == 16 && isHexadecimalDigit(c)) {
         n = isDigit(c) ? c - '0' : c - 'A' + 10;
         const uint32_t limit = num_limit / 16;
         return num_value < limit || (num_value == limit && n <= (num_limit % 16));
@@ -199,10 +184,9 @@ bool Impl::checkLimit(char c, uint8_t &n) const {
 }
 
 void Impl::processNumber(char c) {
-    const uint8_t radix = num_hex ? 16 : 10;
     uint8_t n;
     if (checkLimit(c, n)) {
-        num_value *= radix;
+        num_value *= num_radix;
         num_value += n;
         num_len++;
         console->print(c);
@@ -212,7 +196,7 @@ void Impl::processNumber(char c) {
     State state;
     if (isBackspace(c)) {
         if (num_len) {
-            num_value /= radix;
+            num_value /= num_radix;
             num_len--;
             backspace(1);
             return;
@@ -221,11 +205,7 @@ void Impl::processNumber(char c) {
     } else if (isSpace(c) && num_len) {
         backspace(num_len);
         num_len = num_width;
-        if (num_hex) {
-            printHex(num_value, num_len, false);
-        } else {
-            printDec(num_value, num_len, false);
-        }
+        printNum(num_value, num_len, num_radix, false);
         if (isNewline(c)) {
             console->print(' ');
             state = CLI_NEWLINE;

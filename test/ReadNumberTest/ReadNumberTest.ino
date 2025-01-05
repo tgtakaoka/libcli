@@ -367,6 +367,163 @@ test(ReadNumberTest, readDec_cancel) {
     assertEqual(result.state, State::CLI_CANCEL);
 }
 
+test(ReadNumberTest, readNum) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    Result result;
+    cli.readNum(Result::callback, result.context(), OCT);
+    assertFalse(result.valid);              // no call back
+    assertEqual(stream.printerText(), "");  // no output
+    inject(cli);
+    assertFalse(result.valid);  // no call back
+
+    stream.setInput("1289CD");
+    inject(cli);
+    assertEqual(stream.printerText(), "12");  // non-octals are filtered out
+    assertFalse(result.valid);                // no call back
+    stream.flush();
+
+    stream.setInput(' ');
+    inject(cli);
+    assertEqual(stream.printerText(), BS BS "00000000012 ");
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)012);
+    assertEqual(result.state, State::CLI_SPACE);
+}
+
+test(ReadNumberTest, readNum_limit) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    Result result;
+    cli.readNum(Result::callback, result.context(), OCT, 07777);
+    assertFalse(result.valid);              // no call back
+    assertEqual(stream.printerText(), "");  // no output
+    inject(cli);
+    assertFalse(result.valid);  // no call back
+
+    stream.setInput("770000");
+    inject(cli);
+    assertEqual(stream.printerText(), "7700");  // limit is in effect
+    assertFalse(result.valid);                  // no call back
+    stream.flush();
+
+    stream.setInput("\b\b77 ");
+    inject(cli);
+    assertEqual(stream.printerText(), BS BS "77" BS BS BS BS "7777 ");
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)07777);
+    assertEqual(result.state, State::CLI_SPACE);
+
+    stream.flush();
+    result.valid = false;
+
+    cli.readNum(Result::callback, result.context(), OCT, 017);
+    stream.setInput("aBCd1x9");
+    inject(cli);
+    assertEqual(stream.printerText(), "1");  // limit is in effect
+    assertFalse(result.valid);               // no call back
+    stream.flush();
+
+    stream.setInput("6\n");
+    inject(cli);
+    assertEqual(stream.printerText(), "6" BS BS "16 ");
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)016);
+    assertEqual(result.state, State::CLI_NEWLINE);
+}
+
+test(ReadNumberTest, readNum_defaultValue) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    const uint32_t defval = 01234;
+    cli.printNum(defval, OCT);
+    assertEqual(stream.printerText(), "1234");
+    stream.flush();
+
+    Result result;
+    cli.readNum(Result::callback, result.context(), OCT, 07777, defval);
+    assertFalse(result.valid);  // no call back
+    assertEqual(stream.printerText(), BS BS BS BS "1234");
+    stream.flush();
+
+    stream.setInput("\b\b77 ");
+    inject(cli);
+    assertEqual(stream.printerText(), BS BS "77" BS BS BS BS "1277 ");
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)01277);
+    assertEqual(result.state, State::CLI_SPACE);
+}
+
+test(ReadNumberTest, readNum_edit) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    const uint16_t defval = 1;
+    cli.printNum(defval, OCT, 5);
+    assertEqual(stream.printerText(), "00001");
+    stream.flush();
+
+    Result result;
+    cli.readNum(Result::callback, result.context(), OCT, 010000, defval);
+    assertFalse(result.valid);  // no call back
+    assertEqual(stream.printerText(), BS BS BS BS BS "00001");
+    stream.flush();
+
+    stream.setInput("\b\b\b\b\b10000 ");
+    inject(cli, 20);
+    assertEqual(stream.printerText(), BS BS BS BS BS "10000" BS BS BS BS BS "10000 ");
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)010000);
+    assertEqual(result.state, State::CLI_SPACE);
+}
+
+test(ReadNumberTest, readNum_delete) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    const uint16_t defval = 01234;
+    cli.printNum(defval, OCT, 5);
+    assertEqual(stream.printerText(), "01234");
+    stream.flush();
+
+    Result result;
+    cli.readNum(Result::callback, result.context(), OCT, 010000, defval);
+    assertFalse(result.valid);  // no call back
+    assertEqual(stream.printerText(), BS BS BS BS BS "01234");
+    stream.flush();
+
+    stream.setInput("\b\b\b\b5\b\b\b");
+    inject(cli);
+    assertEqual(stream.printerText(), BS BS BS BS "5" BS BS);
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)0);
+    assertEqual(result.state, State::CLI_DELETE);
+}
+
+test(ReadNumberTest, readNum_cancel) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    Result result;
+    cli.readNum(Result::callback, result.context(), OCT);
+
+    stream.setInput("123489ab\x03");  // C-c is cancel
+    inject(cli);
+    assertEqual(stream.printerText(), "1234 cancel" NL);
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)01234);
+    assertEqual(result.state, State::CLI_CANCEL);
+}
+
 void setup() {}
 
 void loop() {
