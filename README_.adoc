@@ -84,10 +84,10 @@ void readLine(StringCallback callback, uintptr_t context, char *buffer, size_t s
 using NumberCallback = libcli::NumberCallback;
 void readHex(NumberCallback callback, uintptr_t context, uint32_t limit = UINT32_MAX);
 void readHex(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defVal);
-void readDec(NumberCallback callback, uintptr_t context, uint23_t limit = UINt32_MAX);
-void readDec(NumberCallback callback, uintptr_t context, uint23_t limit, uint32_t defVal);
-void readNum(NumberCallback callback, uintptr_t context, uint8_t radix = 10, uint23_t limit = UINt32_MAX);
-void readNum(NumberCallback callback, uintptr_t context, uint8_t radix, uint23_t limit, uint32_t defVal);
+void readDec(NumberCallback callback, uintptr_t context, uint32_t limit = UINt32_MAX);
+void readDec(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defVal);
+void readNum(NumberCallback callback, uintptr_t context, uint8_t radix = 10, uint32_t limit = UINt32_MAX);
+void readNum(NumberCallback callback, uintptr_t context, uint8_t radix, uint32_t limit, uint32_t defVal);
 
 void printStr(const char *text, int8_t width = 0);
 void printStr(const __FlashStringHelper *text, int8_t width = 0);

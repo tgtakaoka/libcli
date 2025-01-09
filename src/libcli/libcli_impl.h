@@ -43,17 +43,16 @@ private:
     void setCallback(LetterCallback callback, uintptr_t context);
     void setCallback(StringCallback callback, uintptr_t context, char *buffer, size_t size,
             bool hasDefval, bool word);
-    void setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, uint8_t radix);
-    void setCallback(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval,
-            uint8_t radix);
+    void setCallback(NumberCallback callback, uintptr_t context, uint_fast8_t radix, uint32_t limit);
+    void setCallback(NumberCallback callback, uintptr_t context, uint_fast8_t radix, uint32_t limit, uint32_t defval);
 
-    size_t backspace(int8_t n);
-    size_t printNum(uint32_t number, int8_t width, uint8_t radix, bool newline);
-    size_t printStr(const __FlashStringHelper *str, int8_t width, bool newline);
-    size_t printStr(const char *str, int8_t width, bool newline);
+    size_t backspace(int_fast8_t n);
+    size_t printNum(uint32_t number, int_fast8_t width, uint_fast8_t radix, bool newline);
+    size_t printStr(const __FlashStringHelper *str, int_fast8_t width, bool newline);
+    size_t printStr(const char *str, int_fast8_t width, bool newline);
 
     /** Delegate methods for Print. */
-    size_t write(uint8_t val) { return console->write(val); }
+    size_t write(uint_fast8_t val) { return console->write(val); }
     size_t write(const uint8_t *buf, size_t size) { return console->write(buf, size); }
     int availableForWrite() { return console->availableForWrite(); }
 
@@ -93,9 +92,9 @@ private:
     void processLetter(char c);
     void processString(char c);
     void processNumber(char c);
-    bool checkLimit(char c, uint8_t &n) const;
-    size_t pad_left(int8_t len, int8_t width, char pad);
-    size_t pad_right(int8_t len, int8_t width, char pad);
+    bool checkLimit(char c, uint_fast8_t &n) const;
+    size_t pad_left(int_fast8_t len, int_fast8_t width, char pad);
+    size_t pad_right(int_fast8_t len, int_fast8_t width, char pad);
 
     /** No copy constructor. */
     Impl(Impl const &) = delete;
