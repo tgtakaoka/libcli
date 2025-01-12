@@ -160,7 +160,7 @@ void Impl::setCallback(
 
 void Impl::setCallback(NumberCallback callback, uintptr_t context, uint_fast8_t radix,
         uint32_t limit, uint32_t defval) {
-    setCallback(callback, context, limit, radix);
+    setCallback(callback, context, radix, limit);
     backspace(num_width);
     num_value = defval;
     num_len = num_width;

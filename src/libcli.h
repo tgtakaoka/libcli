@@ -23,8 +23,8 @@
 
 #define LIBCLI_VERSION_MAJOR 1
 #define LIBCLI_VERSION_MINOR 4
-#define LIBCLI_VERSION_PATCH 0
-#define LIBCLI_VERSION_STRING "1.4.0"
+#define LIBCLI_VERSION_PATCH 2
+#define LIBCLI_VERSION_STRING "1.4.2"
 
 #include "libcli_types.h"
 
