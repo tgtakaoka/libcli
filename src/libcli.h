@@ -22,9 +22,9 @@
 #include <Arduino.h>
 
 #define LIBCLI_VERSION_MAJOR 1
-#define LIBCLI_VERSION_MINOR 3
-#define LIBCLI_VERSION_PATCH 0
-#define LIBCLI_VERSION_STRING "1.3.0"
+#define LIBCLI_VERSION_MINOR 4
+#define LIBCLI_VERSION_PATCH 2
+#define LIBCLI_VERSION_STRING "1.4.2"
 
 #include "libcli_types.h"
 
@@ -35,7 +35,6 @@ namespace libcli {
 /** Library interface of libcli. */
 class Cli final : public Stream {
 public:
-
     Cli() : _impl() {}
 
     /** Initialize with |console| as command line interface. */
@@ -111,6 +110,18 @@ public:
     void readDec(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval);
 
     /**
+     * Read |radix| number less or equal to |limit|.
+     */
+    void readNum(NumberCallback callback, uintptr_t context, uint8_t radix = 10,
+            uint32_t limit = UINT32_MAX);
+
+    /**
+     * Read |radix| number less or equal to |limit| with |defval| as default.
+     */
+    void readNum(NumberCallback callback, uintptr_t context, uint8_t radix, uint32_t limit,
+            uint32_t defval);
+
+    /**
      * Print |number| in 0-prefixed hexadecimal format of |width| chars. Negative |width| means left
      * aligned.
      */
@@ -123,6 +134,12 @@ public:
     size_t printDec(uint32_t number, int8_t width = 0);
 
     /**
+     * Print |number| in right-aligned |radix| format of |width| chars. Negative |width| means left
+     * aligned.
+     */
+    size_t printNum(uint32_t number, uint8_t radix = 10, int8_t width = 0);
+
+    /**
      * Print |number| in 0-prefixed hexadecimal format of |width| chars and newline.
      */
     size_t printlnHex(uint32_t number, int8_t width = 0);
@@ -131,6 +148,11 @@ public:
      * Print |number| in right-aligned decimal format of |width| chars and newline.
      */
     size_t printlnDec(uint32_t number, int8_t width = 0);
+
+    /**
+     * Print |number| in right-aligned |radix|format of |width| chars and newline.
+     */
+    size_t printlnNum(uint32_t number, uint8_t radix = 10, int8_t width = 0);
 
     /*
      * Print |text| in right-aligned of |width| chars. Negative |width| means left-aligned.

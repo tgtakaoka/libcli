@@ -28,11 +28,15 @@ Cli &Cli::instance() {
 }
 
 size_t Cli::printHex(uint32_t number, int8_t width) {
-    return _impl.printHex(number, width, false);
+    return _impl.printNum(number, width, 16, false);
 }
 
 size_t Cli::printDec(uint32_t number, int8_t width) {
-    return _impl.printDec(number, width, false);
+    return _impl.printNum(number, width, 10, false);
+}
+
+size_t Cli::printNum(uint32_t number, uint8_t radix, int8_t width) {
+    return _impl.printNum(number, width, radix, false);
 }
 
 size_t Cli::printStr(const __FlashStringHelper *text, int8_t width) {
@@ -48,11 +52,15 @@ size_t Cli::printStr_P(const /*PROGMEM*/ char *text_P, int8_t width) {
 }
 
 size_t Cli::printlnHex(uint32_t number, int8_t width) {
-    return _impl.printHex(number, width, true);
+    return _impl.printNum(number, width, 16, true);
 }
 
 size_t Cli::printlnDec(uint32_t number, int8_t width) {
-    return _impl.printDec(number, width, true);
+    return _impl.printNum(number, width, 10, true);
+}
+
+size_t Cli::printlnNum(uint32_t number, uint8_t radix, int8_t width) {
+    return _impl.printNum(number, width, radix, true);
 }
 
 size_t Cli::printlnStr(const __FlashStringHelper *text, int8_t width) {
@@ -86,19 +94,28 @@ void Cli::readLine(
 }
 
 void Cli::readHex(NumberCallback callback, uintptr_t context, uint32_t limit) {
-    _impl.setCallback(callback, context, limit, true);
+    _impl.setCallback(callback, context, 16, limit);
 }
 
 void Cli::readHex(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval) {
-    _impl.setCallback(callback, context, limit, defval, true);
+    _impl.setCallback(callback, context, 16, limit, defval);
 }
 
 void Cli::readDec(NumberCallback callback, uintptr_t context, uint32_t limit) {
-    _impl.setCallback(callback, context, limit, false);
+    _impl.setCallback(callback, context, 10, limit);
 }
 
 void Cli::readDec(NumberCallback callback, uintptr_t context, uint32_t limit, uint32_t defval) {
-    _impl.setCallback(callback, context, limit, defval, false);
+    _impl.setCallback(callback, context, 10, limit, defval);
+}
+
+void Cli::readNum(NumberCallback callback, uintptr_t context, uint8_t radix, uint32_t limit) {
+    _impl.setCallback(callback, context, radix, limit);
+}
+
+void Cli::readNum(NumberCallback callback, uintptr_t context, uint8_t radix, uint32_t limit,
+        uint32_t defval) {
+    _impl.setCallback(callback, context, radix, limit, defval);
 }
 
 }  // namespace libcli

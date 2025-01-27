@@ -28,11 +28,12 @@ jobs:
         
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-
-      - name: Compile Example
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+      - name: Compile Examples
         uses: arduino/compile-sketches@v1
         with:
           fqbn: ${{ matrix.boards }}
