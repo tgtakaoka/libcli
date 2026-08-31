@@ -15,6 +15,9 @@ on:
       - "library.*"
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   compile-examples:
     runs-on: ubuntu-latest
@@ -28,7 +31,7 @@ jobs:
         
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: 'recursive'
       - name: Install Arduino CLI
