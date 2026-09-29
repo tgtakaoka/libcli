@@ -23,8 +23,8 @@
 
 #define LIBCLI_VERSION_MAJOR 1
 #define LIBCLI_VERSION_MINOR 5
-#define LIBCLI_VERSION_PATCH 0
-#define LIBCLI_VERSION_STRING "1.5.0"
+#define LIBCLI_VERSION_PATCH 1
+#define LIBCLI_VERSION_STRING "1.5.1"
 
 #include "libcli_types.h"
 
