@@ -70,7 +70,7 @@ void loop() {
 }
 ```
 
-The version 1.4 API has the following functions.
+The version 1.5 API has the following functions.
 
 ``` C++
 /** void (*LetterCallback)(char letter, uintptr_t context); */
