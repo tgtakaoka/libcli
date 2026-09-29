@@ -83,11 +83,13 @@ private:
     uint8_t num_radix;
     uint8_t num_len;
     uint8_t num_width;
+    bool num_empty;
 
     void setProcessor(Processor processor_, uintptr_t context_) {
         processor = processor_;
         context = context_;
     }
+    bool wasNumberEmpty() const { return num_empty; }
     void processNop(char c) { (void)c; }
     void processLetter(char c);
     void processString(char c);
