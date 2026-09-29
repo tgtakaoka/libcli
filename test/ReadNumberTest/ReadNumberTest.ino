@@ -236,6 +236,85 @@ test(ReadNumberTest, readDec) {
     assertEqual(result.state, State::CLI_SPACE);
 }
 
+test(ReadNumberTest, readDec_emptyNewline) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    // No digits typed at all: newline still has to end the field (as 0),
+    // the same way an empty string field ends on CLI_NEWLINE -- a plain
+    // (no defval) readDec must not need a first digit before Enter works.
+    // wasNumberEmpty() is what tells the caller this 0 was an empty Enter, not
+    // the literal digit -- see readDec_zeroNewline just below.
+    Result result;
+    cli.readDec(Result::callback, result.context());
+    assertFalse(result.valid);  // no call back
+
+    stream.setInput("\n");
+    inject(cli);
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)0);
+    assertEqual(result.state, State::CLI_NEWLINE);
+    assertTrue(cli.wasNumberEmpty());
+}
+
+test(ReadNumberTest, readDec_zeroNewline) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    // The literal digit 0, typed and entered, reports the same number
+    // as an empty Enter (0) -- wasNumberEmpty() is the only way to
+    // tell them apart.
+    Result result;
+    cli.readDec(Result::callback, result.context());
+
+    stream.setInput("0\n");
+    inject(cli);
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)0);
+    assertEqual(result.state, State::CLI_NEWLINE);
+    assertFalse(cli.wasNumberEmpty());
+}
+
+test(ReadNumberTest, readDec_emptySpace) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    // A bare space with nothing typed yet is not a boundary (unlike
+    // newline): still swallowed, so a later digit still starts the field.
+    Result result;
+    cli.readDec(Result::callback, result.context());
+
+    stream.setInput(" 5\n");
+    inject(cli);
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)5);
+    assertEqual(result.state, State::CLI_NEWLINE);
+    assertFalse(cli.wasNumberEmpty());
+}
+
+test(ReadNumberTest, readDec_defaultValue_acceptedAsIs) {
+    FakeStream stream;
+    Cli cli;
+    cli.begin(stream);
+
+    // Accepting a shown default outright (Enter, no edit) is not "empty"
+    // by wasNumberEmpty()'s definition -- the field held the default's digits,
+    // even though the user typed nothing new.
+    Result result;
+    cli.readDec(Result::callback, result.context(), 9999, 1234);
+    stream.flush();
+
+    stream.setInput("\n");
+    inject(cli);
+    assertTrue(result.valid);  // called back
+    assertEqual(result.number, (uint32_t)1234);
+    assertEqual(result.state, State::CLI_NEWLINE);
+    assertFalse(cli.wasNumberEmpty());
+}
+
 test(ReadNumberTest, readDec_limit) {
     FakeStream stream;
     Cli cli;

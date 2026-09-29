@@ -155,6 +155,7 @@ void Impl::setCallback(
     num_width = getDigits(num_limit = limit, num_radix = radix);
     num_value = 0;
     num_len = 0;
+    num_empty = false;
     setProcessor(&Impl::processNumber, context);
 }
 
@@ -203,7 +204,16 @@ void Impl::processNumber(char c) {
             return;
         }
         state = CLI_DELETE;
-    } else if (isSpace(c) && num_len) {
+    } else if (isNewline(c) || (isSpace(c) && num_len)) {
+        // Newline always ends a number field, at any length -- an empty
+        // one submits 0, the same as processString's CLI_NEWLINE ending a
+        // string field at any length. A bare space with nothing typed yet
+        // is not a boundary: still swallowed, as before. wasNumberEmpty()
+        // below captures the distinction the caller needs but
+        // callback.number() alone cannot carry: value 0 by an empty
+        // Enter and value 0 typed as a literal digit are different
+        // inputs with the same value.
+        num_empty = (num_len == 0);
         backspace(num_len);
         num_len = num_width;
         printNum(num_value, num_len, num_radix, false);

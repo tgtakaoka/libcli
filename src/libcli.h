@@ -122,6 +122,14 @@ public:
             uint32_t defval);
 
     /**
+     * True if the field a readHex/readDec/readNum callback was just called for ended (by Enter)
+     * with nothing typed into it -- distinguishes an empty Enter from a literal 0, which a
+     * NumberCallback's |number| alone cannot: both report 0. Meaningful only during that callback;
+     * call it before starting the next read.
+     */
+    bool wasNumberEmpty() const { return _impl.wasNumberEmpty(); }
+
+    /**
      * Print |number| in 0-prefixed hexadecimal format of |width| chars. Negative |width| means left
      * aligned.
      */
